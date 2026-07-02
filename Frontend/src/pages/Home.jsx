@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Navbar } from '../components/Navbar/navbar';
 import { Hero } from '../components/Hero/hero';
 import { SearchBar } from '../SearchBar/searchbar';
-import { WhyChooseUs } from '../WhyChooseUs/whychooseus';
+import { WhyChooseUs } from '../WhyChooseUs/whyChooseUs';
 import { PopularVehicles } from '../popularVehicles/popularvehicles';
 import { Reviews } from '../Reviews/reviews';
 import { Footer } from '../Footer/footer';
