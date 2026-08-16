@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Menu, X, User, LogOut, LayoutDashboard, Calendar, Settings, Shield } from 'lucide-react';
 import { Button } from '../Common/Button';
+import { NotificationBell } from '../Common/NotificationBell';
 
 export const Navbar = () => {
   const { user, logout } = useAuth();
@@ -56,9 +57,11 @@ export const Navbar = () => {
           </div>
 
           {/* Desktop Right items */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
             {user ? (
-              <div className="relative">
+              <>
+                <NotificationBell />
+                <div className="relative">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center gap-2.5 p-1 px-3 rounded-full hover:bg-slate-50 border border-slate-100 transition-colors duration-200 cursor-pointer"
@@ -124,6 +127,7 @@ export const Navbar = () => {
                   </div>
                 )}
               </div>
+            </>
             ) : (
               <div className="flex items-center gap-3">
                 <Link to="/login">

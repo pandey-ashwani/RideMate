@@ -57,57 +57,63 @@ export const toggleUserBlock = async (req, res, next) => {
   }
 };
 
-// @desc    List pending host verifications
-// @route   GET /api/admin/pending-hosts
+// @desc    List pending owner verifications
+// @route   GET /api/admin/pending-owners
 // @access  Private (Admin)
-export const getPendingHosts = async (req, res, next) => {
+export const getPendingOwners = async (req, res, next) => {
   try {
-    const unverifiedHosts = await User.find({ role: 'owner', isVerified: false })
+    const unverifiedOwners = await User.find({ role: 'owner', isVerified: false })
       .select('-password')
       .sort({ createdAt: -1 });
 
-    res.json(unverifiedHosts);
+    res.json(unverifiedOwners);
   } catch (error) {
     next(error);
   }
 };
 
+// Alias for backwards compatibility
+export const getPendingHosts = getPendingOwners;
+
 // @desc    Verify or reject owner account
-// @route   PUT /api/admin/hosts/:id/verify or /api/admin/owners/:id/verify
+// @route   PUT /api/admin/owners/:id/verify
 // @access  Private (Admin)
-export const verifyHost = async (req, res, next) => {
+export const verifyOwner = async (req, res, next) => {
   const { status = 'approved', reason } = req.body;
 
   try {
-    const host = await User.findById(req.params.id);
+    const owner = await User.findById(req.params.id);
 
-    if (!host || host.role !== 'owner') {
+    if (!owner || owner.role !== 'owner') {
       res.status(404);
       throw new Error('Owner profile not found');
     }
 
     if (status === 'rejected') {
-      host.isVerified = false;
-      host.verificationStatus = 'rejected';
-      host.rejectionReason = reason || 'Verification documents/details were rejected by Administrator.';
-      await host.save();
+      owner.isVerified = false;
+      owner.verificationStatus = 'rejected';
+      owner.rejectionReason = reason || 'Verification documents/details were rejected by Administrator.';
+      await owner.save();
 
-      res.json({ message: `Owner ${host.name} verification request has been rejected.`, host });
+      res.json({ message: `Owner ${owner.name} verification request has been rejected.`, owner });
     } else {
-      host.isVerified = true;
-      host.verificationStatus = 'approved';
-      host.rejectionReason = '';
-      await host.save();
+      owner.isVerified = true;
+      owner.verificationStatus = 'approved';
+      owner.rejectionReason = '';
+      await owner.save();
 
       // Auto-approve all pre-existing listings of this owner now that they are verified
-      await Vehicle.updateMany({ ownerId: host._id }, { status: 'approved' });
+      await Vehicle.updateMany({ ownerId: owner._id }, { status: 'approved' });
 
-      res.json({ message: `Owner ${host.name} verified successfully. Listed vehicles are approved`, host });
+      res.json({ message: `Owner ${owner.name} verified successfully. Listed vehicles are approved`, owner });
     }
   } catch (error) {
     next(error);
   }
 };
+
+// Alias for backwards compatibility
+export const verifyHost = verifyOwner;
 
 // @desc    Audit all bookings
 // @route   GET /api/admin/bookings
@@ -133,7 +139,7 @@ export const getDashboardStats = async (req, res, next) => {
   try {
     const totalCustomers = await User.countDocuments({ role: 'customer' });
     const totalOwners = await User.countDocuments({ role: 'owner' });
-    const pendingHosts = await User.countDocuments({ role: 'owner', isVerified: false });
+    const pendingOwners = await User.countDocuments({ role: 'owner', isVerified: false });
     const totalVehicles = await Vehicle.countDocuments({});
     
     // Payments statistics calculations
@@ -155,7 +161,8 @@ export const getDashboardStats = async (req, res, next) => {
       metrics: {
         totalCustomers,
         totalOwners,
-        pendingHosts,
+        pendingOwners,
+        pendingHosts: pendingOwners, // Backwards compatibility
         totalVehicles,
         totalRevenue,
         totalCommission,

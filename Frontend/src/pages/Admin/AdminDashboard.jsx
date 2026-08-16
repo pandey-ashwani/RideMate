@@ -11,13 +11,14 @@ export const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalCustomers: 0,
     totalOwners: 0,
-    pendingHosts: 0,
+    pendingOwners: 0,
     totalVehicles: 0,
     totalRevenue: 0,
     totalCommission: 0,
     totalPayouts: 0,
     commissionRate: 10
   });
+
   const [txHistory, setTxHistory] = useState([]);
   const [pendingListingsCount, setPendingListingsCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -117,7 +118,7 @@ export const AdminDashboard = () => {
                       <tr className="bg-slate-50 border-b border-slate-100 text-[10px] text-slate-400 uppercase tracking-wider font-bold">
                         <th className="py-4 px-6">Tx Reference</th>
                         <th className="py-4 px-6">Customer</th>
-                        <th className="py-4 px-6">Rental Host</th>
+                        <th className="py-4 px-6">Rental Owner</th>
                         <th className="py-4 px-6">Gross Booking</th>
                         <th className="py-4 px-6 text-right">Commission Fee ({stats.commissionRate}%)</th>
                       </tr>
@@ -156,8 +157,8 @@ export const AdminDashboard = () => {
                         <p className="text-xs font-bold text-slate-700">Pending Owners</p>
                         <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Verification requests</span>
                       </div>
-                      <Badge variant={stats.pendingHosts > 0 ? 'warning' : 'neutral'} className="text-xs">
-                        {stats.pendingHosts} Pending
+                      <Badge variant={(stats.pendingOwners || stats.pendingHosts) > 0 ? 'warning' : 'neutral'} className="text-xs">
+                        {stats.pendingOwners || stats.pendingHosts || 0} Pending
                       </Badge>
                     </div>
 

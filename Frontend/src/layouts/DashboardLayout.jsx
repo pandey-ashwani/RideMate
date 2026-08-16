@@ -6,7 +6,7 @@ import {
   Car, CalendarCheck, DollarSign, UserCog, Shield, 
   Users, CheckCircle2, FileText, Settings 
 } from 'lucide-react';
-import { Button } from '../components/Common/Button';
+import { NotificationBell } from '../components/Common/NotificationBell';
 
 export const DashboardLayout = ({ children, role = 'owner' }) => {
   const { user, logout } = useAuth();
@@ -51,12 +51,15 @@ export const DashboardLayout = ({ children, role = 'owner' }) => {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-accent font-black text-base">RM</div>
           <span className="font-extrabold tracking-tight text-sm">RideMate Dashboard</span>
         </div>
-        <button 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-1 text-slate-300 hover:text-white cursor-pointer"
-        >
-          {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        <div className="flex items-center gap-3">
+          <NotificationBell />
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-1 text-slate-300 hover:text-white cursor-pointer"
+          >
+            {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </header>
 
       <div className="flex flex-row flex-grow relative">

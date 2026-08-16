@@ -19,7 +19,7 @@ const paymentSchema = new mongoose.Schema(
     },
     amount: { type: Number, required: true },
     commission: { type: Number, required: true }, // platform share
-    netPayout: { type: Number, required: true }, // host share
+    netPayout: { type: Number, required: true }, // owner share
     status: {
       type: String,
       enum: ['pending', 'completed'],

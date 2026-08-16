@@ -25,6 +25,8 @@ import ManageListings from './pages/Admin/ManageListings';
 import ViewAllBookings from './pages/Admin/ViewAllBookings';
 import AdminPayments from './pages/Admin/AdminPayments';
 
+import TermsPage from './pages/TermsPage';
+
 // Role Guard Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user } = useAuth();
@@ -53,6 +55,8 @@ function App() {
           <Route path="/vehicles" element={<VehicleSearch />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<TermsPage />} />
 
           {/* Customer Secure Routes */}
           <Route

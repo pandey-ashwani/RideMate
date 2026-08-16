@@ -21,9 +21,9 @@ const userSchema = new mongoose.Schema(
     verificationDoc: { type: String, default: '' },
     drivingLicense: { type: String, default: '' },
     licenseDoc: { type: String, default: '' },
-    isBlocked: { type: Boolean, default: false }, // Admin lock control
-    company: { type: String }, // Relevant for Owner
-    phone: { type: String }, // Relevant for Owner
+    phone: { type: String }, // Phone number normalized to E.164 format
+    phoneVerified: { type: Boolean, default: false },
+    emailVerified: { type: Boolean, default: false },
     avatar: {
       type: String,
       default: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150'

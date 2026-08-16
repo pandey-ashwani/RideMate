@@ -1,6 +1,8 @@
 import Booking from '../models/Booking.js';
 import Vehicle from '../models/Vehicle.js';
 import Payment from '../models/Payment.js';
+import User from '../models/User.js';
+import { notifyUser } from '../services/notificationService.js';
 
 // @desc    Create a new booking request
 // @route   POST /api/bookings
@@ -49,6 +51,26 @@ export const createBooking = async (req, res, next) => {
     });
 
     const createdBooking = await booking.save();
+
+    // EVENT 1: Customer creates booking -> Notify Owner
+    const ownerUser = await User.findById(vehicle.ownerId);
+    if (ownerUser) {
+      notifyUser({
+        userId: ownerUser._id,
+        type: 'booking_request',
+        title: 'New Booking Request',
+        message: `You have a new booking request for ${vehicle.name} from ${req.user.name}. Please open your dashboard to review and respond.`,
+        bookingId: createdBooking._id,
+        sendSms: true,
+        sendEmail: true,
+        toPhone: ownerUser.phone,
+        toEmail: ownerUser.email,
+        smsText: `RideMate: You have a new booking request for ${vehicle.name} from ${req.user.name}. Please open your RideMate dashboard to review and respond.`,
+        emailSubject: `New Booking Request for ${vehicle.name}`,
+        emailText: `Hello ${ownerUser.name},\n\nYou have received a new booking request for ${vehicle.name} from ${req.user.name}.\n\nPlease log in to your RideMate dashboard to accept or reject the request.`
+      });
+    }
+
     res.status(201).json(createdBooking);
   } catch (error) {
     next(error);
@@ -67,7 +89,6 @@ export const cancelBooking = async (req, res, next) => {
       throw new Error('Booking not found');
     }
 
-    // Security: Only customer who booked can cancel
     if (booking.customerId.toString() !== req.user._id.toString()) {
       res.status(403);
       throw new Error('Not authorized to cancel this booking');
@@ -78,10 +99,9 @@ export const cancelBooking = async (req, res, next) => {
       throw new Error('Cannot cancel a ride that is already completed or rejected');
     }
 
-    booking.status = 'rejected'; // Mark as rejected/cancelled
+    booking.status = 'rejected';
     await booking.save();
 
-    // Release vehicle availability
     const vehicle = await Vehicle.findById(booking.vehicleId);
     if (vehicle) {
       vehicle.availability = true;
@@ -116,7 +136,7 @@ export const getOwnerRequests = async (req, res, next) => {
   try {
     const bookings = await Booking.find({ ownerId: req.user._id })
       .populate('vehicleId', 'name brand type image pricePerDay location')
-      .populate('customerId', 'name email avatar')
+      .populate('customerId', 'name email avatar phone drivingLicense licenseDoc')
       .sort({ createdAt: -1 });
 
     res.json(bookings);
@@ -139,7 +159,6 @@ export const updateBookingStatus = async (req, res, next) => {
       throw new Error('Booking not found');
     }
 
-    // Security: Only owner of vehicle can update status
     if (booking.ownerId.toString() !== req.user._id.toString()) {
       res.status(403);
       throw new Error('Not authorized to respond to this booking request');
@@ -154,13 +173,71 @@ export const updateBookingStatus = async (req, res, next) => {
     const updatedBooking = await booking.save();
 
     const vehicle = await Vehicle.findById(booking.vehicleId);
+    const customerUser = await User.findById(booking.customerId);
 
     if (status === 'completed' || status === 'rejected') {
-      // Release vehicle availability back to public
       if (vehicle) {
         vehicle.availability = true;
         await vehicle.save();
       }
+    }
+
+    const vehicleName = vehicle ? vehicle.name : 'your booked vehicle';
+
+    // EVENT 2: Owner accepts booking -> Notify Customer
+    if (status === 'owner_accepted' && customerUser) {
+      notifyUser({
+        userId: customerUser._id,
+        type: 'owner_accepted',
+        title: 'Booking Request Accepted!',
+        message: `Your rental request for ${vehicleName} has been accepted by the Owner. Please open RideMate to submit your pickup details & driving license.`,
+        bookingId: updatedBooking._id,
+        sendSms: true,
+        sendEmail: true,
+        toPhone: customerUser.phone,
+        toEmail: customerUser.email,
+        smsText: `RideMate: Your rental request for ${vehicleName} has been accepted by the Owner. Please open RideMate to complete your booking details.`,
+        emailSubject: `RideMate: Booking Accepted for ${vehicleName}`,
+        emailText: `Hello ${customerUser.name},\n\nGreat news! Your rental request for ${vehicleName} has been accepted by the Owner.\n\nPlease open RideMate to submit your driving license and pickup details to confirm your booking.`
+      });
+    }
+
+    // EVENT 3: Owner rejects booking -> Notify Customer
+    if (status === 'rejected' && customerUser) {
+      notifyUser({
+        userId: customerUser._id,
+        type: 'owner_rejected',
+        title: 'Booking Request Declined',
+        message: `Your rental request for ${vehicleName} was declined by the Owner.`,
+        bookingId: updatedBooking._id,
+        sendSms: true,
+        sendEmail: true,
+        toPhone: customerUser.phone,
+        toEmail: customerUser.email,
+        smsText: `RideMate: Your rental request for ${vehicleName} was declined by the Owner.`,
+        emailSubject: `RideMate: Booking Request Update`,
+        emailText: `Hello ${customerUser.name},\n\nYour rental request for ${vehicleName} was declined by the Owner. You can browse other available vehicles on RideMate.`
+      });
+    }
+
+    // EVENT 5: Booking completed -> Notify Customer & Owner
+    if (status === 'completed') {
+      if (customerUser) {
+        notifyUser({
+          userId: customerUser._id,
+          type: 'booking_completed',
+          title: 'Ride Completed',
+          message: `Your rental for ${vehicleName} has been marked as completed. Thank you for using RideMate!`,
+          bookingId: updatedBooking._id
+        });
+      }
+      notifyUser({
+        userId: req.user._id,
+        type: 'booking_completed',
+        title: 'Rental Completed',
+        message: `The rental for ${vehicleName} has been completed successfully.`,
+        bookingId: updatedBooking._id
+      });
     }
 
     res.json({ message: `Booking status updated to ${status}`, booking: updatedBooking });
@@ -183,7 +260,6 @@ export const confirmBookingDetails = async (req, res, next) => {
       throw new Error('Booking not found');
     }
 
-    // Security: Only customer who booked can submit details
     if (booking.customerId.toString() !== req.user._id.toString()) {
       res.status(403);
       throw new Error('Not authorized to submit details for this booking');
@@ -199,7 +275,6 @@ export const confirmBookingDetails = async (req, res, next) => {
       throw new Error('Driving License Number, License Document photo, and Pickup Location are required to confirm booking');
     }
 
-    // Ensure valid totalCost
     if (!booking.totalCost || isNaN(booking.totalCost)) {
       const vehicle = await Vehicle.findById(booking.vehicleId);
       const start = new Date(booking.pickupDate);
@@ -217,7 +292,6 @@ export const confirmBookingDetails = async (req, res, next) => {
 
     const confirmedBooking = await booking.save();
 
-    // Lock vehicle availability
     const vehicle = await Vehicle.findById(booking.vehicleId);
     if (vehicle) {
       vehicle.availability = false;
@@ -240,6 +314,28 @@ export const confirmBookingDetails = async (req, res, next) => {
       status: 'completed',
       transactionId: `TX-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`
     });
+
+    // EVENT 4: Customer submits DL + pickup details -> Notify Owner
+    // Privacy Safety Rule: DL document numbers & photos are STRICTLY EXCLUDED from SMS and Email
+    const ownerUser = await User.findById(booking.ownerId);
+    const vehicleName = vehicle ? vehicle.name : 'vehicle';
+
+    if (ownerUser) {
+      notifyUser({
+        userId: ownerUser._id,
+        type: 'booking_confirmed',
+        title: 'Booking Confirmed!',
+        message: `Booking confirmed for ${vehicleName}. Customer: ${req.user.name}. Pickup: ${pickupLocation}. Check dashboard for details.`,
+        bookingId: confirmedBooking._id,
+        sendSms: true,
+        sendEmail: true,
+        toPhone: ownerUser.phone,
+        toEmail: ownerUser.email,
+        smsText: `RideMate: Booking confirmed for ${vehicleName}. Customer: ${req.user.name}. Pickup: ${pickupLocation}. Required booking details are available in your RideMate dashboard.`,
+        emailSubject: `Booking Confirmed for ${vehicleName}`,
+        emailText: `Hello ${ownerUser.name},\n\nBooking for ${vehicleName} has been confirmed by customer ${req.user.name}.\nPickup Location: ${pickupLocation}.\n\nRequired driving license details are available in your authenticated RideMate dashboard.`
+      });
+    }
 
     res.json({ message: 'Booking confirmed successfully', booking: confirmedBooking });
   } catch (error) {

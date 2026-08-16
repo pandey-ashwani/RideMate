@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { apiRequest } from '../../utils/api';
 import { Navbar } from '../../components/Navbar/navbar';
 import { Footer } from '../../Footer/footer';
 import { Button } from '../../components/Common/Button';
 import { Input } from '../../components/Common/Input';
+import { Modal } from '../../components/Common/Modal';
+import { TermsContent } from '../TermsPage';
 import { User, Mail, Lock, ShieldAlert, Phone, Building, CheckCircle2 } from 'lucide-react';
 
 export const Register = () => {
@@ -22,6 +25,11 @@ export const Register = () => {
   const [company, setCompany] = useState('');
   const [phone, setPhone] = useState('');
 
+  // Terms & Privacy agreement states
+  const [agreedTerms, setAgreedTerms] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [activeTermsTab, setActiveTermsTab] = useState('terms');
+
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
@@ -37,10 +45,46 @@ export const Register = () => {
   // Profile Picture optional file state
   const [avatarFile, setAvatarFile] = useState(null);
 
+  // OTP Verification states
+  const [showOtpStep, setShowOtpStep] = useState(false);
+  const [otpValue, setOtpValue] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpTimer, setOtpTimer] = useState(300); // 5 minutes
+  const [resendCooldown, setResendCooldown] = useState(60); // 60s cooldown
+  const [registeredUserEmail, setRegisteredUserEmail] = useState('');
+  const [registeredUserRole, setRegisteredUserRole] = useState('');
+
+  // Countdown timer for OTP
+  useEffect(() => {
+    let interval = null;
+    if (showOtpStep && otpTimer > 0) {
+      interval = setInterval(() => {
+        setOtpTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [showOtpStep, otpTimer]);
+
+  // Resend Cooldown timer
+  useEffect(() => {
+    let interval = null;
+    if (showOtpStep && resendCooldown > 0) {
+      interval = setInterval(() => {
+        setResendCooldown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [showOtpStep, resendCooldown]);
+
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
     setSuccessMsg('');
+
+    if (!agreedTerms) {
+      setError('You must accept the RideMate Terms & Conditions and Privacy Policy to register.');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
@@ -48,7 +92,7 @@ export const Register = () => {
     }
 
     if (role === 'owner' && (!company || !phone)) {
-      setError('Company name and Phone number are required for vehicle owners.');
+      setError('Company name and Mobile number are required for vehicle owners.');
       return;
     }
 
@@ -73,19 +117,71 @@ export const Register = () => {
     setLoading(false);
 
     if (res.success) {
-      setSuccessMsg('Registration successful! Redirecting you...');
-      
+      setRegisteredUserEmail(res.user?.email || email);
+      setRegisteredUserRole(res.user?.role || role);
+      setShowOtpStep(true);
+      setSuccessMsg('Account created! Enter the 6-digit OTP sent to your contact details.');
+    } else {
+      setError(res.message || 'Registration failed. Please check your inputs.');
+    }
+  };
+
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMsg('');
+
+    if (!otpValue || otpValue.trim().length !== 6) {
+      setError('Please enter the 6-digit verification code.');
+      return;
+    }
+
+    setOtpLoading(true);
+    try {
+      await apiRequest('/auth/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: registeredUserEmail || email,
+          otp: otpValue.trim()
+        })
+      });
+
+      setSuccessMsg('OTP verified successfully! Redirecting...');
       setTimeout(() => {
-        if (role === 'owner') {
-          // Redirect to owner dashboard
+        if ((registeredUserRole || role) === 'owner') {
           navigate('/owner');
         } else {
           navigate('/dashboard');
         }
-      }, 1500);
-    } else {
-      setError(res.message || 'Registration failed. Please check your inputs.');
+      }, 1200);
+    } catch (err) {
+      setError(err.message || 'OTP verification failed.');
+    } finally {
+      setOtpLoading(false);
     }
+  };
+
+  const handleResendOTP = async () => {
+    if (resendCooldown > 0) return;
+    setError('');
+    setSuccessMsg('');
+    try {
+      await apiRequest('/auth/resend-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email: registeredUserEmail || email })
+      });
+      setSuccessMsg('A new 6-digit OTP code has been sent.');
+      setResendCooldown(60);
+      setOtpTimer(300);
+    } catch (err) {
+      setError(err.message || 'Failed to resend OTP code.');
+    }
+  };
+
+  const formatTimer = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -136,7 +232,54 @@ export const Register = () => {
             </div>
           )}
 
-          <form onSubmit={handleRegister} className="flex flex-col gap-4">
+          {showOtpStep ? (
+            <form onSubmit={handleVerifyOTP} className="flex flex-col gap-5 text-left animate-fade-in-up">
+              <div className="p-4 bg-blue-50/80 border border-blue-100 rounded-xl text-center flex flex-col gap-1">
+                <h4 className="text-sm font-bold text-primary">Verify Your Account OTP</h4>
+                <p className="text-xs text-slate-600">
+                  Enter the 6-digit verification code sent to <strong className="text-slate-800">{registeredUserEmail}</strong>.
+                </p>
+                <div className="text-xs font-black text-primary mt-1">
+                  Code expires in: {formatTimer(otpTimer)}
+                </div>
+              </div>
+
+              <Input
+                label="6-Digit Verification Code"
+                type="text"
+                placeholder="123456"
+                required
+                maxLength={6}
+                value={otpValue}
+                onChange={(e) => setOtpValue(e.target.value)}
+                icon={Lock}
+              />
+
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={otpLoading || otpValue.trim().length !== 6}
+                className="w-full py-3 font-bold shadow-md cursor-pointer disabled:opacity-50"
+              >
+                {otpLoading ? 'Verifying Code...' : 'Verify & Activate Account'}
+              </Button>
+
+              <div className="flex items-center justify-between text-xs pt-1">
+                <span className="text-slate-500 font-medium">Didn't receive code?</span>
+                <button
+                  type="button"
+                  onClick={handleResendOTP}
+                  disabled={resendCooldown > 0}
+                  className={`font-bold transition-colors cursor-pointer ${
+                    resendCooldown > 0 ? 'text-slate-400 cursor-not-allowed' : 'text-primary hover:underline'
+                  }`}
+                >
+                  {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleRegister} className="flex flex-col gap-4">
             <Input
               label="Full Name"
               type="text"
@@ -224,15 +367,53 @@ export const Register = () => {
               icon={Lock}
             />
 
+            {/* Terms & Conditions Agreement Section */}
+            <div className="flex flex-col gap-2.5 text-left p-3.5 bg-slate-50 border border-slate-200/70 rounded-xl my-1">
+              <p className="text-[11px] font-semibold text-slate-500 leading-relaxed">
+                By creating a RideMate account, you agree to the{' '}
+                <button
+                  type="button"
+                  onClick={() => { setActiveTermsTab('terms'); setIsTermsModalOpen(true); }}
+                  className="text-primary font-bold hover:underline cursor-pointer"
+                >
+                  RideMate Terms & Conditions
+                </button>{' '}
+                and{' '}
+                <button
+                  type="button"
+                  onClick={() => { setActiveTermsTab('privacy'); setIsTermsModalOpen(true); }}
+                  className="text-primary font-bold hover:underline cursor-pointer"
+                >
+                  Privacy Policy
+                </button>
+                . You confirm that the information provided by you is accurate and that you will use RideMate in accordance with applicable laws and platform rules.
+              </p>
+
+              <label className="flex items-center gap-2.5 cursor-pointer mt-0.5 select-none">
+                <input
+                  type="checkbox"
+                  required
+                  disabled={loading || !!successMsg}
+                  checked={agreedTerms}
+                  onChange={(e) => setAgreedTerms(e.target.checked)}
+                  className="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary cursor-pointer shrink-0"
+                />
+                <span className="text-xs font-bold text-slate-700">
+                  I agree to the RideMate Terms & Conditions and Privacy Policy
+                </span>
+              </label>
+            </div>
+
             <Button 
               type="submit" 
               variant="primary" 
-              disabled={loading || !!successMsg}
-              className="w-full py-3 mt-2 font-bold shadow-md cursor-pointer"
+              disabled={loading || !!successMsg || !agreedTerms}
+              className="w-full py-3 mt-1 font-bold shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Registering Account...' : 'Create Account'}
             </Button>
           </form>
+          )}
 
           <p className="text-center text-xs font-semibold text-slate-500">
             Already have an account?{' '}
@@ -242,6 +423,21 @@ export const Register = () => {
           </p>
         </div>
       </main>
+
+      {/* Clean Terms & Conditions Modal Overlay */}
+      <Modal
+        isOpen={isTermsModalOpen}
+        onClose={() => setIsTermsModalOpen(false)}
+        title={activeTermsTab === 'terms' ? 'RideMate Terms & Conditions' : 'RideMate Privacy Policy'}
+        size="lg"
+        footer={
+          <Button variant="primary" onClick={() => setIsTermsModalOpen(false)} className="font-bold">
+            Close & Continue Registration
+          </Button>
+        }
+      >
+        <TermsContent activeTab={activeTermsTab} />
+      </Modal>
 
       <Footer />
     </div>

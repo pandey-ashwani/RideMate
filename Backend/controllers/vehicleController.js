@@ -106,7 +106,7 @@ export const createVehicle = async (req, res, next) => {
       ownerId: req.user._id,
       location,
       description,
-      status: isApproved ? 'approved' : 'pending' // Pending validation if host unverified
+      status: isApproved ? 'approved' : 'pending' // Pending validation if owner unverified
     });
 
     const createdVehicle = await vehicle.save();

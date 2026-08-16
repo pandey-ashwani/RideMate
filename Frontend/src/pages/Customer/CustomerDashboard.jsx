@@ -172,7 +172,7 @@ export const CustomerDashboard = () => {
       try {
         const formData = new FormData();
         formData.append('image', confirmDocFile);
-        const uploadRes = await apiRequest('/upload', {
+        const uploadRes = await apiRequest('/upload/protected', {
           method: 'POST',
           body: formData
         });

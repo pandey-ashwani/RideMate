@@ -73,7 +73,7 @@ export const ManageListings = () => {
         {/* Title */}
         <div>
           <h1 className="text-2xl font-black text-slate-800 tracking-tight leading-none mb-1">Global Vehicle Listings</h1>
-          <p className="text-xs font-semibold text-slate-400">Review newly listed fleet items from hosts, audit compliance and approve listings</p>
+          <p className="text-xs font-semibold text-slate-400">Review newly listed fleet items from owners, audit compliance and approve listings</p>
         </div>
 
         {/* Listings queue */}

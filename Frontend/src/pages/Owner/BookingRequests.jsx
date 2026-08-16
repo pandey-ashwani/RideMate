@@ -22,7 +22,7 @@ export const BookingRequests = () => {
       data.sort((a, b) => order[a.status] - order[b.status]);
       setRequests(data || []);
     } catch (err) {
-      console.error('Error loading host booking queue:', err);
+      console.error('Error loading owner booking queue:', err);
     } finally {
       setLoading(false);
     }
@@ -119,7 +119,7 @@ export const BookingRequests = () => {
                       {req.licenseDoc && (
                         <div className="mt-1">
                           <a 
-                            href={req.licenseDoc.startsWith('http') ? req.licenseDoc : `http://localhost:5000${req.licenseDoc}`}
+                            href={`http://localhost:5000/api/documents/dl/${req._id}`}
                             target="_blank"
                             rel="noreferrer"
                             className="text-primary font-bold hover:underline inline-flex items-center gap-1"

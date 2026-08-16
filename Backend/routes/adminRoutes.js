@@ -2,8 +2,8 @@ import express from 'express';
 import {
   getAllUsers,
   toggleUserBlock,
-  getPendingHosts,
-  verifyHost,
+  getPendingOwners,
+  verifyOwner,
   getAllBookings,
   getDashboardStats,
   updateCommissionConfig,
@@ -20,10 +20,10 @@ router.use(protect, authorize('admin'));
 router.get('/users', getAllUsers);
 router.put('/users/:id/block', toggleUserBlock);
 
-router.get('/pending-hosts', getPendingHosts);
-router.get('/pending-owners', getPendingHosts);
-router.put('/hosts/:id/verify', verifyHost);
-router.put('/owners/:id/verify', verifyHost);
+router.get('/pending-owners', getPendingOwners);
+router.get('/pending-hosts', getPendingOwners);
+router.put('/owners/:id/verify', verifyOwner);
+router.put('/hosts/:id/verify', verifyOwner);
 
 router.get('/listings', getAllListings);
 router.put('/listings/:id/approve', approveListing);

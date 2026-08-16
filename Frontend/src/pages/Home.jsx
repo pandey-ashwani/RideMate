@@ -158,7 +158,7 @@ export const Home = () => {
               </Button>
             </Link>
             <Link to="/login?role=owner">
-              <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 hover:border-white font-semibold">
+              <Button variant="outline" size="lg" className="!bg-transparent !border-2 !border-white !text-white hover:!bg-white/20 font-bold shadow-md hover:scale-105 duration-150">
                 Owner Login
               </Button>
             </Link>
@@ -203,7 +203,7 @@ export const Home = () => {
             </div>
             <h4 className="text-lg font-bold text-slate-800">Your request has been sent!</h4>
             <p className="text-sm text-slate-500 max-w-md">
-              We have submitted your booking request to the vehicle host. You will receive an update on your dashboard once the owner approves or rejects the request.
+              We have submitted your booking request to the vehicle owner. You will receive an update on your dashboard once the owner approves or rejects the request.
             </p>
             <div className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-left text-xs font-semibold text-slate-600 mt-4 flex flex-col gap-2">
               <div className="flex justify-between">

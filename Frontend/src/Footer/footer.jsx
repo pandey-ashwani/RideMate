@@ -95,7 +95,7 @@ export const Footer = () => {
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-4.5 h-4.5 text-accent shrink-0" />
-                <span>+91 98765 43210</span>
+                <span>+91 62007 89620</span>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-4.5 h-4.5 text-accent shrink-0" />
@@ -127,8 +127,8 @@ export const Footer = () => {
         <div className="border-t border-slate-800 pt-8 mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
           <p>© {new Date().getFullYear()} RideMate Inc. All rights reserved.</p>
           <div className="flex items-center gap-6">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+            <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
             <a href="#" className="hover:text-white transition-colors">Sitemap</a>
           </div>
         </div>

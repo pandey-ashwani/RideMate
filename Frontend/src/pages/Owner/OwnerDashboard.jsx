@@ -25,13 +25,13 @@ export const OwnerDashboard = () => {
       if (!user) return;
       setLoading(true);
       try {
-        // Load host's bookings
+        // Load owner's bookings
         const ownerBookings = await apiRequest('/bookings/owner-requests');
         
-        // Load host's vehicles (fetch all and filter locally by ownerId)
+        // Load owner's vehicles (fetch all and filter locally by ownerId)
         const allVehiclesData = await apiRequest('/vehicles?pageSize=100');
-        const hostVehicles = (allVehiclesData.vehicles || []).filter(v => v.ownerId === user._id);
-        setMyVehicles(hostVehicles);
+        const ownerVehicles = (allVehiclesData.vehicles || []).filter(v => v.ownerId === user._id);
+        setMyVehicles(ownerVehicles);
 
         // Derive statistics
         const completedBookings = ownerBookings.filter(b => b.status === 'completed');
@@ -62,8 +62,8 @@ export const OwnerDashboard = () => {
 
         // Utilization: ratio of approved/completed booking days over total fleet capacity
         const totalRentalsCount = ownerBookings.filter(b => b.status === 'approved' || b.status === 'completed').length;
-        const utilizationRate = hostVehicles.length > 0 
-          ? Math.min(100, Math.round((totalRentalsCount / (hostVehicles.length * 3)) * 100)) 
+        const utilizationRate = ownerVehicles.length > 0 
+          ? Math.min(100, Math.round((totalRentalsCount / (ownerVehicles.length * 3)) * 100)) 
           : 0;
 
         setStats({
@@ -74,7 +74,7 @@ export const OwnerDashboard = () => {
           monthlyEarnings: last6Months
         });
       } catch (err) {
-        console.error('Error fetching host dashboard metrics:', err);
+        console.error('Error fetching owner dashboard metrics:', err);
       } finally {
         setLoading(false);
       }
