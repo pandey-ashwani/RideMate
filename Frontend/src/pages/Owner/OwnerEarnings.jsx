@@ -25,7 +25,7 @@ export const OwnerEarnings = () => {
         const completed = ownerBookings.filter(b => b.status === 'completed');
         setCompletedBookings(completed);
 
-        const grossAmt = completed.reduce((sum, b) => sum + b.totalCost, 0);
+        const grossAmt = completed.reduce((sum, b) => sum + (Number(b.totalCost) || 0), 0);
         const commissionAmt = Number((grossAmt * 0.1).toFixed(2)); // 10% platform share
         const netAmt = Number((grossAmt - commissionAmt).toFixed(2));
 
@@ -97,7 +97,7 @@ export const OwnerEarnings = () => {
 
               <Card className="border border-slate-100 p-5" hoverable={false}>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Host Net Payout</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Owner Net Earnings</span>
                   <div className="w-8 h-8 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center justify-center text-emerald-500">
                     <ArrowUpRight className="w-4 h-4" />
                   </div>
@@ -127,17 +127,25 @@ export const OwnerEarnings = () => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 bg-white">
-                        {completedBookings.map((b) => (
-                          <tr key={b._id} className="hover:bg-slate-50/50">
-                            <td className="py-4 px-6 font-bold text-slate-400">{b._id}</td>
-                            <td className="py-4 px-6 font-bold text-slate-800">{b.vehicleId?.name}</td>
-                            <td className="py-4 px-6">{b.customerId?.name}</td>
-                            <td className="py-4 px-6 text-slate-400">{b.pickupDate.split('T')[0]} to {b.dropoffDate.split('T')[0]}</td>
-                            <td className="py-4 px-6 font-bold text-slate-700">₹{b.totalCost}</td>
-                            <td className="py-4 px-6 text-amber-600">-₹{(b.totalCost * 0.1).toFixed(2)}</td>
-                            <td className="py-4 px-6 text-right font-black text-emerald-600">₹{(b.totalCost * 0.9).toFixed(2)}</td>
-                          </tr>
-                        ))}
+                        {completedBookings.map((b) => {
+                          const cost = Number(b.totalCost) || 0;
+                          const comm = Number((cost * 0.1).toFixed(2));
+                          const net = Number((cost - comm).toFixed(2));
+                          const pickupStr = b.pickupDate ? String(b.pickupDate).split('T')[0] : 'N/A';
+                          const dropoffStr = b.dropoffDate ? String(b.dropoffDate).split('T')[0] : 'N/A';
+
+                          return (
+                            <tr key={b._id} className="hover:bg-slate-50/50">
+                              <td className="py-4 px-6 font-bold text-slate-400">{b._id}</td>
+                              <td className="py-4 px-6 font-bold text-slate-800">{b.vehicleId?.name || 'Vehicle'}</td>
+                              <td className="py-4 px-6">{b.customerId?.name || 'Customer'}</td>
+                              <td className="py-4 px-6 text-slate-400">{pickupStr} to {dropoffStr}</td>
+                              <td className="py-4 px-6 font-bold text-slate-700">{cost > 0 ? `₹${cost}` : '₹0'}</td>
+                              <td className="py-4 px-6 text-amber-600">-₹{comm}</td>
+                              <td className="py-4 px-6 text-right font-black text-emerald-600">₹{net}</td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

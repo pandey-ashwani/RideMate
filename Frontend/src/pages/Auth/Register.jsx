@@ -34,6 +34,9 @@ export const Register = () => {
     }
   }, [searchParams]);
 
+  // Profile Picture optional file state
+  const [avatarFile, setAvatarFile] = useState(null);
+
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
@@ -45,12 +48,28 @@ export const Register = () => {
     }
 
     if (role === 'owner' && (!company || !phone)) {
-      setError('Company name and Phone number are required for hosts.');
+      setError('Company name and Phone number are required for vehicle owners.');
       return;
     }
 
     setLoading(true);
-    const res = await register(name, email, password, role, company, phone);
+
+    let avatarPath = '';
+    if (avatarFile) {
+      try {
+        const formData = new FormData();
+        formData.append('image', avatarFile);
+        const uploadRes = await apiRequest('/upload', {
+          method: 'POST',
+          body: formData
+        });
+        avatarPath = uploadRes.path;
+      } catch (err) {
+        console.error('Avatar upload failed during registration:', err);
+      }
+    }
+
+    const res = await register(name, email, password, role, company, phone, avatarPath);
     setLoading(false);
 
     if (res.success) {
@@ -98,7 +117,7 @@ export const Register = () => {
                   ${successMsg ? 'opacity-50 cursor-not-allowed' : ''}
                 `}
               >
-                {roleType === 'owner' ? '🔑 Register as Host' : '👤 Register as Customer'}
+                {roleType === 'owner' ? '🔑 Register as Owner' : '👤 Register as Customer'}
               </button>
             ))}
           </div>
@@ -165,6 +184,23 @@ export const Register = () => {
                 />
               </>
             )}
+
+            <div className="flex flex-col gap-1.5 text-left">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Profile Picture / Logo (Optional)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                disabled={loading || !!successMsg}
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setAvatarFile(e.target.files[0]);
+                  }
+                }}
+                className="w-full text-xs font-semibold px-3 py-2 rounded-lg border border-slate-200 bg-slate-50/50 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-primary file:text-white hover:file:bg-primary-dark cursor-pointer"
+              />
+            </div>
 
             <Input
               label="Password"

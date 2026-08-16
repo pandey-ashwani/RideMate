@@ -72,10 +72,12 @@ export const getPendingHosts = async (req, res, next) => {
   }
 };
 
-// @desc    Verify host account
-// @route   PUT /api/admin/hosts/:id/verify
+// @desc    Verify or reject owner account
+// @route   PUT /api/admin/hosts/:id/verify or /api/admin/owners/:id/verify
 // @access  Private (Admin)
 export const verifyHost = async (req, res, next) => {
+  const { status = 'approved', reason } = req.body;
+
   try {
     const host = await User.findById(req.params.id);
 
@@ -84,13 +86,24 @@ export const verifyHost = async (req, res, next) => {
       throw new Error('Owner profile not found');
     }
 
-    host.isVerified = true;
-    await host.save();
+    if (status === 'rejected') {
+      host.isVerified = false;
+      host.verificationStatus = 'rejected';
+      host.rejectionReason = reason || 'Verification documents/details were rejected by Administrator.';
+      await host.save();
 
-    // Auto-approve all pre-existing listings of this host now that they are verified
-    await Vehicle.updateMany({ ownerId: host._id }, { status: 'approved' });
+      res.json({ message: `Owner ${host.name} verification request has been rejected.`, host });
+    } else {
+      host.isVerified = true;
+      host.verificationStatus = 'approved';
+      host.rejectionReason = '';
+      await host.save();
 
-    res.json({ message: `Owner ${host.name} verified successfully. Listed vehicles are approved`, host });
+      // Auto-approve all pre-existing listings of this owner now that they are verified
+      await Vehicle.updateMany({ ownerId: host._id }, { status: 'approved' });
+
+      res.json({ message: `Owner ${host.name} verified successfully. Listed vehicles are approved`, host });
+    }
   } catch (error) {
     next(error);
   }
@@ -125,9 +138,9 @@ export const getDashboardStats = async (req, res, next) => {
     
     // Payments statistics calculations
     const payments = await Payment.find({});
-    const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
-    const totalCommission = payments.reduce((sum, p) => sum + p.commission, 0);
-    const totalPayouts = payments.reduce((sum, p) => sum + p.netPayout, 0);
+    const totalRevenue = payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    const totalCommission = payments.reduce((sum, p) => sum + (Number(p.commission) || 0), 0);
+    const totalPayouts = payments.reduce((sum, p) => sum + (Number(p.netPayout) || 0), 0);
 
     const commissionRate = Number(req.app.get('commissionRate')) || 10;
 

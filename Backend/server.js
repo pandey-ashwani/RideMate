@@ -49,8 +49,8 @@ app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 
-// File Upload handler endpoint
-app.post('/api/upload', protect, authorize('owner', 'admin'), upload.single('image'), (req, res) => {
+// File Upload handler endpoint (Supports vehicle images, verification docs, and profile pictures)
+app.post('/api/upload', upload.single('image'), (req, res) => {
   if (!req.file) {
     res.status(400);
     throw new Error('No image file provided');

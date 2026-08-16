@@ -35,8 +35,8 @@ export const OwnerDashboard = () => {
 
         // Derive statistics
         const completedBookings = ownerBookings.filter(b => b.status === 'completed');
-        const grossEarnings = completedBookings.reduce((sum, b) => sum + b.totalCost, 0);
-        const activeRentals = ownerBookings.filter(b => b.status === 'approved').length;
+        const grossEarnings = completedBookings.reduce((sum, b) => sum + (Number(b.totalCost) || 0), 0);
+        const activeRentals = ownerBookings.filter(b => b.status === 'approved' || b.status === 'confirmed' || b.status === 'owner_accepted').length;
         const pending = ownerBookings.filter(b => b.status === 'pending');
         setPendingRequests(pending);
 
@@ -56,7 +56,7 @@ export const OwnerDashboard = () => {
           const monthIdx = date.getMonth();
           const match = last6Months.find(m => m.monthIndex === monthIdx);
           if (match) {
-            match.earnings += b.totalCost;
+            match.earnings += (Number(b.totalCost) || 0);
           }
         });
 
@@ -88,14 +88,44 @@ export const OwnerDashboard = () => {
       <div className="flex flex-col gap-8 text-left">
         {/* Title */}
         <div>
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight leading-none mb-1">Host Overview</h1>
-          <p className="text-xs font-semibold text-slate-400">Track listings, manage rental requests and audit your earnings</p>
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight leading-none mb-1">Owner Dashboard</h1>
+          <p className="text-xs font-semibold text-slate-400">Manage your rental business, list vehicles, handle booking requests, and view earnings</p>
         </div>
+
+        {/* Owner Verification Status Banner */}
+        {user && !user.isVerified && (
+          <div className={`p-4 rounded-2xl border text-xs font-semibold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+            user.verificationStatus === 'rejected'
+              ? 'bg-red-50 border-red-200 text-red-800'
+              : 'bg-amber-50 border-amber-200 text-amber-800'
+          }`}>
+            <div className="flex items-start gap-3">
+              <div className="text-xl shrink-0">
+                {user.verificationStatus === 'rejected' ? '❌' : '⏳'}
+              </div>
+              <div>
+                <h4 className="font-extrabold text-sm mb-0.5">
+                  {user.verificationStatus === 'rejected' ? 'Owner Verification Rejected' : 'Owner Verification Pending'}
+                </h4>
+                <p>
+                  {user.verificationStatus === 'rejected'
+                    ? `Reason: ${user.rejectionReason || 'Uploaded business info was rejected.'} Please update your verification documents.`
+                    : 'Your business details are under review by RideMate Admin. Once approved, your listed vehicles will appear in public search.'}
+                </p>
+              </div>
+            </div>
+            <Link to="/owner/profile">
+              <Button size="sm" variant={user.verificationStatus === 'rejected' ? 'primary' : 'outline'} className="font-bold shrink-0">
+                {user.verificationStatus === 'rejected' ? 'Update & Resubmit Info' : 'View Verification Info'}
+              </Button>
+            </Link>
+          </div>
+        )}
 
         {loading ? (
           <div className="text-center py-20 bg-white border border-slate-100 rounded-2xl shadow-xs">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-3"></div>
-            <p className="text-xs font-semibold text-slate-400">Fetching host summary metrics...</p>
+            <p className="text-xs font-semibold text-slate-400">Fetching owner metrics...</p>
           </div>
         ) : (
           <>

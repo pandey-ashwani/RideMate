@@ -54,9 +54,10 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('ridemate_token');
   };
 
-  const register = async (name, email, password, role, company = '', phone = '') => {
+  const register = async (name, email, password, role, company = '', phone = '', avatar = '') => {
     try {
       const body = { name, email, password, role };
+      if (avatar) body.avatar = avatar;
       if (role === 'owner') {
         body.company = company;
         body.phone = phone;
@@ -95,10 +96,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Admin controls
-  const verifyOwner = async (ownerId) => {
+  const verifyOwner = async (ownerId, status = 'approved', reason = '') => {
     try {
-      await apiRequest(`/admin/hosts/${ownerId}/verify`, {
-        method: 'PUT'
+      await apiRequest(`/admin/owners/${ownerId}/verify`, {
+        method: 'PUT',
+        body: JSON.stringify({ status, reason })
       });
       return { success: true };
     } catch (error) {

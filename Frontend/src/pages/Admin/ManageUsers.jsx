@@ -47,7 +47,7 @@ export const ManageUsers = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight leading-none mb-1">User Management</h1>
-            <p className="text-xs font-semibold text-slate-400">Review customers and hosts registrations, audit statuses and apply lock controls</p>
+            <p className="text-xs font-semibold text-slate-400">Review customer and owner registrations, audit account statuses, and manage platform access controls</p>
           </div>
 
           <div className="w-full sm:w-64">
@@ -85,7 +85,11 @@ export const ManageUsers = () => {
                   {users.map((u) => (
                     <tr key={u._id} className="hover:bg-slate-50/50">
                       <td className="py-4 px-6 flex items-center gap-3">
-                        <img src={u.avatar} alt={u.name} className="w-8 h-8 rounded-full object-cover border" />
+                        <img 
+                          src={u.avatar ? (u.avatar.startsWith('http') ? u.avatar : `http://localhost:5000${u.avatar}`) : 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'} 
+                          alt={u.name} 
+                          className="w-8 h-8 rounded-full object-cover border" 
+                        />
                         <span className="font-bold text-slate-800">{u.name}</span>
                       </td>
                       <td className="py-4 px-6 font-semibold text-slate-400">
@@ -97,7 +101,7 @@ export const ManageUsers = () => {
                       <td className="py-4 px-6 text-left">
                         <div className="flex flex-col gap-1 items-start">
                           <Badge variant={u.role === 'owner' ? 'secondary' : 'primary'} className="uppercase">
-                            {u.role === 'owner' ? 'host' : u.role}
+                            {u.role}
                           </Badge>
                           {u.role === 'owner' && u.company && (
                             <span className="text-[10px] text-slate-400 font-bold block whitespace-nowrap">

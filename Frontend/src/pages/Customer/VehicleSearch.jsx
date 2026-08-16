@@ -136,6 +136,14 @@ export const VehicleSearch = () => {
     }
   };
 
+  const [drivingLicense, setDrivingLicense] = useState(user?.drivingLicense || '');
+
+  useEffect(() => {
+    if (user?.drivingLicense) {
+      setDrivingLicense(user.drivingLicense);
+    }
+  }, [user]);
+
   // Confirm booking
   const handleConfirmBooking = async (e) => {
     e.preventDefault();
@@ -145,11 +153,24 @@ export const VehicleSearch = () => {
     }
 
     if (user.role !== 'customer') {
-      alert('Only customers can book vehicles.');
+      alert('Only customers can request vehicle rentals.');
+      return;
+    }
+
+    if (!drivingLicense || drivingLicense.trim() === '') {
+      alert('A valid Driving License Number is required to request a vehicle booking.');
       return;
     }
 
     try {
+      // Save DL to user profile if updated
+      if (drivingLicense !== user.drivingLicense) {
+        await apiRequest('/auth/profile', {
+          method: 'PUT',
+          body: JSON.stringify({ drivingLicense })
+        });
+      }
+
       await apiRequest('/bookings', {
         method: 'POST',
         body: JSON.stringify({
@@ -159,7 +180,7 @@ export const VehicleSearch = () => {
         })
       });
 
-      alert('Booking requested successfully! Redirecting to your dashboard...');
+      alert('Booking request sent to owner successfully! Redirecting to your bookings queue...');
       setIsDetailModalOpen(false);
       navigate('/dashboard?tab=bookings');
     } catch (err) {
@@ -342,7 +363,7 @@ export const VehicleSearch = () => {
                       </div>
 
                       <Button variant="primary" size="sm" className="w-full font-bold shadow-xs">
-                        View & Rent
+                        View Details
                       </Button>
                     </div>
                   </Card>
@@ -392,7 +413,7 @@ export const VehicleSearch = () => {
                 disabled={!pickupDate || !dropoffDate || !activeVehicle?.availability}
                 className="font-bold text-primary-dark"
               >
-                {user ? 'Request Ride' : 'Login to Book'}
+                {user ? 'Request Booking' : 'Login to Book'}
               </Button>
             </div>
           )
@@ -403,9 +424,9 @@ export const VehicleSearch = () => {
             <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-2">
               <ShieldCheck className="w-9 h-9" />
             </div>
-            <h4 className="text-lg font-bold text-slate-800">Booking Requested!</h4>
+            <h4 className="text-lg font-bold text-slate-800">Booking Request Sent</h4>
             <p className="text-sm text-slate-500 max-w-md">
-              Your booking request has been registered and is pending approval from the host. Check your dashboard to view history and status!
+              Booking request sent. Waiting for Owner confirmation. You can track your booking status on your Customer Dashboard!
             </p>
             
             <div className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-left text-xs font-semibold text-slate-600 mt-4 flex flex-col gap-2">

@@ -124,34 +124,28 @@ function App() {
             }
           />
           <Route
-            path="/admin/verify-hosts"
+            path="/admin/verify-owners"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <VerifyOwners />
               </ProtectedRoute>
             }
           />
+          <Route path="/admin/verify-hosts" element={<Navigate to="/admin/verify-owners" replace />} />
           <Route
-            path="/admin/listings"
+            path="/admin/reports"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <ManageListings />
+                <AdminPayments />
               </ProtectedRoute>
             }
           />
+          <Route path="/admin/payments" element={<Navigate to="/admin/reports" replace />} />
           <Route
             path="/admin/bookings"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <ViewAllBookings />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/payments"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <AdminPayments />
               </ProtectedRoute>
             }
           />

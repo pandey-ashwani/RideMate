@@ -12,6 +12,15 @@ const userSchema = new mongoose.Schema(
       default: 'customer'
     },
     isVerified: { type: Boolean, default: false }, // Relevant for Owner verification
+    verificationStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    },
+    rejectionReason: { type: String, default: '' },
+    verificationDoc: { type: String, default: '' },
+    drivingLicense: { type: String, default: '' },
+    licenseDoc: { type: String, default: '' },
     isBlocked: { type: Boolean, default: false }, // Admin lock control
     company: { type: String }, // Relevant for Owner
     phone: { type: String }, // Relevant for Owner

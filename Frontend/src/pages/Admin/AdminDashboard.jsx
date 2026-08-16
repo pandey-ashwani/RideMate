@@ -148,13 +148,13 @@ export const AdminDashboard = () => {
               {/* Quick Actions Panel */}
               <Card className="lg:col-span-4 border border-slate-100 p-6 flex flex-col justify-between" hoverable={false}>
                 <div className="flex flex-col gap-5">
-                  <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Verification Pipelines</h3>
+                  <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Platform Controls</h3>
                   
                   <div className="flex flex-col gap-3">
                     <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between">
                       <div className="text-left">
-                        <p className="text-xs font-bold text-slate-700">Pending Hosts</p>
-                        <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Approval requests</span>
+                        <p className="text-xs font-bold text-slate-700">Pending Owners</p>
+                        <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Verification requests</span>
                       </div>
                       <Badge variant={stats.pendingHosts > 0 ? 'warning' : 'neutral'} className="text-xs">
                         {stats.pendingHosts} Pending
@@ -163,25 +163,25 @@ export const AdminDashboard = () => {
 
                     <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between">
                       <div className="text-left">
-                        <p className="text-xs font-bold text-slate-700">Pending Vehicles</p>
-                        <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Fleet approval queue</span>
+                        <p className="text-xs font-bold text-slate-700">Total Registered Owners</p>
+                        <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Platform rental owners</span>
                       </div>
-                      <Badge variant={pendingListingsCount > 0 ? 'warning' : 'neutral'} className="text-xs">
-                        {pendingListingsCount} Pending
+                      <Badge variant="primary" className="text-xs">
+                        {stats.totalOwners} Owners
                       </Badge>
                     </div>
                   </div>
                 </div>
 
                 <div className="border-t border-slate-100 pt-4 mt-6 flex flex-col gap-2">
-                  <Link to="/admin/verify-hosts">
+                  <Link to="/admin/verify-owners">
                     <Button variant="primary" size="sm" className="w-full font-bold">
-                      Verify Hosts Queue
+                      Owner Verification
                     </Button>
                   </Link>
-                  <Link to="/admin/listings">
+                  <Link to="/admin/users">
                     <Button variant="outline" size="sm" className="w-full font-bold border-slate-200">
-                      Approve Listings
+                      Manage Platform Users
                     </Button>
                   </Link>
                 </div>

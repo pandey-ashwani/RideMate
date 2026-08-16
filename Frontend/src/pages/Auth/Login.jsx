@@ -81,6 +81,13 @@ export const Login = () => {
             ))}
           </div>
 
+          {role === 'admin' && (
+            <div className="bg-blue-50 border border-blue-200/60 p-3 rounded-lg text-blue-800 text-[11px] font-semibold flex flex-col gap-0.5 text-left">
+              <span className="font-extrabold uppercase tracking-wide text-blue-900">Platform Admin Access</span>
+              <p>Default Admin: <span className="font-mono bg-blue-100/80 px-1 py-0.5 rounded text-blue-900">admin@ridemate.com</span> | Pass: <span className="font-mono bg-blue-100/80 px-1 py-0.5 rounded text-blue-900">adminpassword123</span></p>
+            </div>
+          )}
+
           {error && (
             <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-lg text-xs font-semibold">
               <ShieldAlert className="w-4.5 h-4.5 shrink-0" />

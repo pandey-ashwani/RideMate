@@ -13,7 +13,7 @@ export const WhyChooseUs = () => {
     {
       icon: HeartHandshake,
       title: 'Trusted P2P Community',
-      description: 'Rent directly from local hosts in your city. Check real reviews and ratings written by other community members before booking.',
+      description: 'Rent directly from local vehicle owners in your city. Check real reviews and ratings written by other community members before booking.',
       color: 'text-primary'
     },
     {

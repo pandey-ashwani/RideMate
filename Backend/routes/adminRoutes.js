@@ -21,7 +21,9 @@ router.get('/users', getAllUsers);
 router.put('/users/:id/block', toggleUserBlock);
 
 router.get('/pending-hosts', getPendingHosts);
+router.get('/pending-owners', getPendingHosts);
 router.put('/hosts/:id/verify', verifyHost);
+router.put('/owners/:id/verify', verifyHost);
 
 router.get('/listings', getAllListings);
 router.put('/listings/:id/approve', approveListing);

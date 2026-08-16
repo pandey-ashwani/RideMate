@@ -5,7 +5,7 @@ import generateToken from '../utils/generateToken.js';
 // @route   POST /api/auth/register
 // @access  Public
 export const registerUser = async (req, res, next) => {
-  const { name, email, password, role, company, phone } = req.body;
+  const { name, email, password, role, company, phone, avatar } = req.body;
 
   try {
     const userExists = await User.findOne({ email });
@@ -15,9 +15,13 @@ export const registerUser = async (req, res, next) => {
       throw new Error('User already exists');
     }
 
-    // Assign admin role if this is the first user registering
-    const isFirstUser = (await User.countDocuments({})) === 0;
-    const finalRole = isFirstUser ? 'admin' : role || 'customer';
+    // Public registration for admin role is strictly disabled
+    if (role === 'admin') {
+      res.status(400);
+      throw new Error('Public registration as Admin is disabled');
+    }
+
+    const finalRole = role === 'owner' ? 'owner' : 'customer';
 
     // Validation for Owner specific fields
     if (finalRole === 'owner' && (!company || !phone)) {
@@ -32,17 +36,24 @@ export const registerUser = async (req, res, next) => {
       role: finalRole,
       company,
       phone,
-      // First admin and customers are auto-verified, hosts await admin verification
-      isVerified: finalRole !== 'owner'
+      avatar: avatar || undefined,
+      // First admin and customers are auto-verified, owners await admin verification
+      isVerified: finalRole !== 'owner',
+      verificationStatus: finalRole === 'owner' ? 'pending' : 'approved'
     });
 
     if (user) {
-      res.status(201).json({
+      res.json({
         _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
         isVerified: user.isVerified,
+        verificationStatus: user.verificationStatus,
+        rejectionReason: user.rejectionReason,
+        verificationDoc: user.verificationDoc,
+        drivingLicense: user.drivingLicense,
+        licenseDoc: user.licenseDoc,
         avatar: user.avatar,
         token: generateToken(user._id)
       });
@@ -89,6 +100,13 @@ export const authUser = async (req, res, next) => {
         email: user.email,
         role: user.role,
         isVerified: user.isVerified,
+        verificationStatus: user.verificationStatus || (user.isVerified ? 'approved' : 'pending'),
+        rejectionReason: user.rejectionReason || '',
+        verificationDoc: user.verificationDoc || '',
+        drivingLicense: user.drivingLicense || '',
+        licenseDoc: user.licenseDoc || '',
+        company: user.company,
+        phone: user.phone,
         avatar: user.avatar,
         token: generateToken(user._id)
       });
@@ -115,6 +133,11 @@ export const getUserProfile = async (req, res, next) => {
         email: user.email,
         role: user.role,
         isVerified: user.isVerified,
+        verificationStatus: user.verificationStatus || (user.isVerified ? 'approved' : 'pending'),
+        rejectionReason: user.rejectionReason || '',
+        verificationDoc: user.verificationDoc || '',
+        drivingLicense: user.drivingLicense || '',
+        licenseDoc: user.licenseDoc || '',
         company: user.company,
         phone: user.phone,
         avatar: user.avatar,
@@ -141,9 +164,20 @@ export const updateUserProfile = async (req, res, next) => {
       user.email = req.body.email || user.email;
       user.avatar = req.body.avatar || user.avatar;
       
+      if (req.body.drivingLicense !== undefined) user.drivingLicense = req.body.drivingLicense;
+      if (req.body.licenseDoc !== undefined) user.licenseDoc = req.body.licenseDoc;
+
       if (user.role === 'owner') {
         user.company = req.body.company || user.company;
         user.phone = req.body.phone || user.phone;
+        if (req.body.verificationDoc !== undefined) user.verificationDoc = req.body.verificationDoc;
+        
+        // If owner was rejected or pending and resubmits verification info, reset status to pending for Admin re-review
+        if (req.body.resubmitVerification) {
+          user.verificationStatus = 'pending';
+          user.isVerified = false;
+          user.rejectionReason = '';
+        }
       }
 
       if (req.body.password) {
@@ -158,6 +192,11 @@ export const updateUserProfile = async (req, res, next) => {
         email: updatedUser.email,
         role: updatedUser.role,
         isVerified: updatedUser.isVerified,
+        verificationStatus: updatedUser.verificationStatus || (updatedUser.isVerified ? 'approved' : 'pending'),
+        rejectionReason: updatedUser.rejectionReason || '',
+        verificationDoc: updatedUser.verificationDoc || '',
+        drivingLicense: updatedUser.drivingLicense || '',
+        licenseDoc: updatedUser.licenseDoc || '',
         company: updatedUser.company,
         phone: updatedUser.phone,
         avatar: updatedUser.avatar,

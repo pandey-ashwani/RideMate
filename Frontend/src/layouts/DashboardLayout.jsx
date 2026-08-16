@@ -21,23 +21,27 @@ export const DashboardLayout = ({ children, role = 'owner' }) => {
 
   // Define sidebar links based on role
   const ownerLinks = [
-    { label: 'Overview', path: '/owner', icon: HomeIcon },
-    { label: 'Manage Vehicles', path: '/owner/vehicles', icon: Car },
-    { label: 'Booking Requests', path: '/owner/bookings', icon: CalendarCheck },
-    { label: 'Earnings Stats', path: '/owner/earnings', icon: DollarSign },
-    { label: 'Host Profile', path: '/owner/profile', icon: UserCog }
+    { label: 'Dashboard', path: '/owner', icon: HomeIcon },
+    { label: 'My Vehicles', path: '/owner/vehicles', icon: Car },
+    { label: 'Bookings', path: '/owner/bookings', icon: CalendarCheck },
+    { label: 'Earnings', path: '/owner/earnings', icon: DollarSign },
+    { label: 'Profile', path: '/owner/profile', icon: UserCog }
   ];
 
   const adminLinks = [
-    { label: 'Overview', path: '/admin', icon: HomeIcon },
-    { label: 'Manage Users', path: '/admin/users', icon: Users },
-    { label: 'Verify Hosts', path: '/admin/verify-hosts', icon: CheckCircle2 },
-    { label: 'Vehicle Listings', path: '/admin/listings', icon: Car },
-    { label: 'All Bookings', path: '/admin/bookings', icon: CalendarCheck },
-    { label: 'Financial Audit', path: '/admin/payments', icon: FileText }
+    { label: 'Dashboard', path: '/admin', icon: HomeIcon },
+    { label: 'Owner Verification', path: '/admin/verify-owners', icon: CheckCircle2 },
+    { label: 'Users', path: '/admin/users', icon: Users },
+    { label: 'Reports', path: '/admin/reports', icon: FileText }
   ];
 
   const links = role === 'admin' ? adminLinks : ownerLinks;
+
+  const getOwnerStatusLabel = () => {
+    if (user?.verificationStatus === 'rejected') return '❌ Verification Rejected';
+    if (user?.isVerified) return '✅ Verified Owner';
+    return '⏳ Pending Owner Verification';
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col text-slate-800">
@@ -75,14 +79,14 @@ export const DashboardLayout = ({ children, role = 'owner' }) => {
             {/* User Mini Info */}
             <div className="px-6 py-6 border-b border-slate-800 flex items-center gap-3">
               <img
-                src={user?.avatar}
+                src={user?.avatar ? (user.avatar.startsWith('http') ? user.avatar : `http://localhost:5000${user.avatar}`) : 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'}
                 alt={user?.name}
                 className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20"
               />
               <div className="text-left">
                 <p className="text-xs font-black text-white truncate max-w-[130px]">{user?.name}</p>
                 <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mt-0.5">
-                  {role === 'admin' ? '🛡️ Admin' : user?.isVerified ? '✅ Verified Host' : '⏳ Pending Host'}
+                  {role === 'admin' ? '🛡️ Admin' : getOwnerStatusLabel()}
                 </span>
               </div>
             </div>
@@ -91,7 +95,17 @@ export const DashboardLayout = ({ children, role = 'owner' }) => {
             {role === 'owner' && user && !user.isVerified && (
               <div className="mx-4 mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-semibold leading-relaxed flex items-start gap-2">
                 <ShieldAlert className="w-4 h-4 shrink-0" />
-                <p>Pending Verification. Your listings will hide from search until verified.</p>
+                <div>
+                  <p>
+                    {user.verificationStatus === 'rejected' 
+                      ? 'Verification Rejected. Update info in Profile to resubmit.' 
+                      : 'Pending Owner Verification. Listings will hide from search until approved.'
+                    }
+                  </p>
+                  <Link to="/owner/profile" className="text-primary-light font-bold hover:underline block mt-1">
+                    Manage Verification →
+                  </Link>
+                </div>
               </div>
             )}
 

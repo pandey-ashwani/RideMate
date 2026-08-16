@@ -82,42 +82,53 @@ export const Home = () => {
           <div className="max-w-3xl mx-auto mb-16 flex flex-col gap-3">
             <span className="text-sm font-extrabold text-primary uppercase tracking-widest">How It Works</span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-800 tracking-tight leading-tight">
-              Get moving in 3 simple steps.
+              Get moving in 4 simple steps.
             </h2>
             <div className="w-16 h-1 bg-accent mx-auto rounded-full mt-1"></div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative">
             {/* Step 1 */}
-            <div className="flex flex-col items-center gap-4 group">
-              <div className="w-16 h-16 rounded-2xl bg-primary text-accent flex items-center justify-center font-black text-xl shadow-md group-hover:scale-105 transition-transform duration-200">
+            <div className="flex flex-col items-center gap-3 group bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              <div className="w-14 h-14 rounded-2xl bg-primary text-accent flex items-center justify-center font-black text-lg shadow-md group-hover:scale-105 transition-transform duration-200">
                 1
               </div>
-              <h3 className="text-lg font-bold text-slate-800 mt-2">Find Your Ride</h3>
-              <p className="text-sm text-slate-500 max-w-xs leading-relaxed">
-                Enter your location and dates. Filter by cars, scooters, or bikes to find the perfect fit.
+              <h3 className="text-base font-bold text-slate-800 mt-2">Search Rides</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Filter by scooters, bikes, or cars and pick your rental location.
               </p>
             </div>
 
             {/* Step 2 */}
-            <div className="flex flex-col items-center gap-4 group">
-              <div className="w-16 h-16 rounded-2xl bg-accent text-primary flex items-center justify-center font-black text-xl shadow-md group-hover:scale-105 transition-transform duration-200">
+            <div className="flex flex-col items-center gap-3 group bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              <div className="w-14 h-14 rounded-2xl bg-accent text-primary flex items-center justify-center font-black text-lg shadow-md group-hover:scale-105 transition-transform duration-200">
                 2
               </div>
-              <h3 className="text-lg font-bold text-slate-800 mt-2">Book Instantly</h3>
-              <p className="text-sm text-slate-500 max-w-xs leading-relaxed">
-                Select your vehicle, fill in checkout details, and send a booking request to the verified owner.
+              <h3 className="text-base font-bold text-slate-800 mt-2">Request Booking</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Select your pickup dates, enter your Driving License info, and submit your request.
               </p>
             </div>
 
             {/* Step 3 */}
-            <div className="flex flex-col items-center gap-4 group">
-              <div className="w-16 h-16 rounded-2xl bg-primary text-accent flex items-center justify-center font-black text-xl shadow-md group-hover:scale-105 transition-transform duration-200">
+            <div className="flex flex-col items-center gap-3 group bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              <div className="w-14 h-14 rounded-2xl bg-primary text-accent flex items-center justify-center font-black text-lg shadow-md group-hover:scale-105 transition-transform duration-200">
                 3
               </div>
-              <h3 className="text-lg font-bold text-slate-800 mt-2">Unlock & Go</h3>
-              <p className="text-sm text-slate-500 max-w-xs leading-relaxed">
-                Coordinate pickup with the host. Grab the keys or use keyless app unlock, and hit the road!
+              <h3 className="text-base font-bold text-slate-800 mt-2">Owner Confirms</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                The vehicle owner reviews your request and approves the rental.
+              </p>
+            </div>
+
+            {/* Step 4 */}
+            <div className="flex flex-col items-center gap-3 group bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+              <div className="w-14 h-14 rounded-2xl bg-accent text-primary flex items-center justify-center font-black text-lg shadow-md group-hover:scale-105 transition-transform duration-200">
+                4
+              </div>
+              <h3 className="text-base font-bold text-slate-800 mt-2">Pick Up & Go</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Coordinate pickup with the vehicle owner, collect keys, and enjoy your ride!
               </p>
             </div>
           </div>
@@ -130,7 +141,7 @@ export const Home = () => {
       {/* Popular Vehicles */}
       <PopularVehicles onBookQuickly={handleOpenBookModal} />
 
-      {/* Owner Host CTA Banner */}
+      {/* Owner CTA Banner */}
       <section className="py-16 md:py-20 bg-gradient-to-br from-primary-dark via-primary to-blue-800 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-accent/5 rounded-full blur-3xl -mr-16 pointer-events-none"></div>
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 flex flex-col items-center gap-6">
@@ -138,12 +149,12 @@ export const Home = () => {
             Earn extra income with your vehicle.
           </h2>
           <p className="text-slate-200 max-w-xl text-sm sm:text-base leading-relaxed">
-            List your idle scooter, bike, or car on RideMate. Set your own pricing, manage availability, and let your vehicle work for you. Join thousands of verified hosts.
+            List your idle scooter, bike, or car on RideMate. Set your own pricing, manage availability, and operate your rental business. Join thousands of verified owners.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 mt-2">
             <Link to="/register?role=owner">
               <Button variant="secondary" size="lg" className="font-bold shadow-md hover:scale-105 duration-150">
-                Become a Host
+                Become an Owner
               </Button>
             </Link>
             <Link to="/login?role=owner">

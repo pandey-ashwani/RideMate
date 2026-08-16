@@ -125,11 +125,11 @@ export const getOwnerRequests = async (req, res, next) => {
   }
 };
 
-// @desc    Update booking request status (Approve/Reject/Complete)
+// @desc    Update booking request status (Owner: Accept/Reject/Complete)
 // @route   PUT /api/bookings/:id/status
 // @access  Private (Owner)
 export const updateBookingStatus = async (req, res, next) => {
-  const { status } = req.body; // approved, rejected, completed
+  const { status } = req.body; // owner_accepted, rejected, completed
 
   try {
     const booking = await Booking.findById(req.params.id);
@@ -155,30 +155,6 @@ export const updateBookingStatus = async (req, res, next) => {
 
     const vehicle = await Vehicle.findById(booking.vehicleId);
 
-    if (status === 'approved') {
-      // Lock vehicle availability
-      if (vehicle) {
-        vehicle.availability = false;
-        await vehicle.save();
-      }
-
-      // Generate simulated Payment ledger
-      const commissionRate = Number(req.app.get('commissionRate')) || 10;
-      const commissionAmt = Number((booking.totalCost * (commissionRate / 100)).toFixed(2));
-      const netAmt = Number((booking.totalCost - commissionAmt).toFixed(2));
-
-      await Payment.create({
-        bookingId: booking._id,
-        customerId: booking.customerId,
-        ownerId: booking.ownerId,
-        amount: booking.totalCost,
-        commission: commissionAmt,
-        netPayout: netAmt,
-        status: 'completed',
-        transactionId: `TX-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`
-      });
-    }
-
     if (status === 'completed' || status === 'rejected') {
       // Release vehicle availability back to public
       if (vehicle) {
@@ -188,6 +164,84 @@ export const updateBookingStatus = async (req, res, next) => {
     }
 
     res.json({ message: `Booking status updated to ${status}`, booking: updatedBooking });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Customer submits DL and pickup details after Owner acceptance to confirm booking
+// @route   PUT /api/bookings/:id/confirm
+// @access  Private (Customer)
+export const confirmBookingDetails = async (req, res, next) => {
+  const { drivingLicense, licenseDoc, pickupLocation, pickupNotes } = req.body;
+
+  try {
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      res.status(404);
+      throw new Error('Booking not found');
+    }
+
+    // Security: Only customer who booked can submit details
+    if (booking.customerId.toString() !== req.user._id.toString()) {
+      res.status(403);
+      throw new Error('Not authorized to submit details for this booking');
+    }
+
+    if (booking.status !== 'owner_accepted') {
+      res.status(400);
+      throw new Error('Booking must be accepted by owner before providing confirmation details');
+    }
+
+    if (!drivingLicense || !licenseDoc || !pickupLocation) {
+      res.status(400);
+      throw new Error('Driving License Number, License Document photo, and Pickup Location are required to confirm booking');
+    }
+
+    // Ensure valid totalCost
+    if (!booking.totalCost || isNaN(booking.totalCost)) {
+      const vehicle = await Vehicle.findById(booking.vehicleId);
+      const start = new Date(booking.pickupDate);
+      const end = new Date(booking.dropoffDate);
+      const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) || 1;
+      const price = vehicle ? vehicle.pricePerDay : 100;
+      booking.totalCost = days * price;
+    }
+
+    booking.drivingLicense = drivingLicense;
+    booking.licenseDoc = licenseDoc;
+    booking.pickupLocation = pickupLocation;
+    booking.pickupNotes = pickupNotes || '';
+    booking.status = 'confirmed';
+
+    const confirmedBooking = await booking.save();
+
+    // Lock vehicle availability
+    const vehicle = await Vehicle.findById(booking.vehicleId);
+    if (vehicle) {
+      vehicle.availability = false;
+      await vehicle.save();
+    }
+
+    // Generate Payment ledger entry
+    const commissionRate = Number(req.app.get('commissionRate')) || 10;
+    const bookingCost = Number(booking.totalCost) || 0;
+    const commissionAmt = Number((bookingCost * (commissionRate / 100)).toFixed(2));
+    const netAmt = Number((bookingCost - commissionAmt).toFixed(2));
+
+    await Payment.create({
+      bookingId: booking._id,
+      customerId: booking.customerId,
+      ownerId: booking.ownerId,
+      amount: bookingCost,
+      commission: commissionAmt,
+      netPayout: netAmt,
+      status: 'completed',
+      transactionId: `TX-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`
+    });
+
+    res.json({ message: 'Booking confirmed successfully', booking: confirmedBooking });
   } catch (error) {
     next(error);
   }

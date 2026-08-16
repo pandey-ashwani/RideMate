@@ -47,7 +47,9 @@ export const BookingRequests = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
+      case 'confirmed':
       case 'approved': return 'success';
+      case 'owner_accepted': return 'warning';
       case 'completed': return 'info';
       case 'pending': return 'warning';
       case 'rejected': return 'danger';
@@ -86,7 +88,7 @@ export const BookingRequests = () => {
                   <div className="flex items-center gap-2 md:justify-start justify-center flex-wrap">
                     <span className="text-[10px] font-bold text-slate-400">REQUEST ID: {req._id}</span>
                     <Badge variant={getStatusColor(req.status)} className="capitalize py-0.5 px-2 text-[10px]">
-                      {req.status}
+                      {req.status === 'owner_accepted' ? 'Accepted (Awaiting Customer Details)' : req.status}
                     </Badge>
                   </div>
                   <h4 className="text-base font-black text-slate-800 tracking-tight leading-none">{req.vehicleId?.name}</h4>
@@ -99,9 +101,35 @@ export const BookingRequests = () => {
                     <span>•</span>
                     <span className="flex items-center gap-1">
                       <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
-                      {req.pickupDate.split('T')[0]} to {req.dropoffDate.split('T')[0]}
+                      {req.pickupDate?.split('T')[0]} to {req.dropoffDate?.split('T')[0]}
                     </span>
                   </div>
+
+                  {/* Confirmed Details Block */}
+                  {(req.status === 'confirmed' || req.status === 'completed') && (
+                    <div className="mt-2 p-3 bg-slate-50 border border-slate-200/60 rounded-xl text-xs font-semibold flex flex-col gap-1 text-slate-700">
+                      <p className="font-extrabold uppercase text-[10px] text-slate-400 tracking-wider">Confirmed Rental Details</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-0.5">
+                        <div><span className="text-slate-400">Driving License:</span> <span className="font-bold">{req.drivingLicense || 'N/A'}</span></div>
+                        <div><span className="text-slate-400">Pickup Location:</span> <span className="font-bold">{req.pickupLocation || 'N/A'}</span></div>
+                      </div>
+                      {req.pickupNotes && (
+                        <div><span className="text-slate-400">Pickup Notes:</span> <span>{req.pickupNotes}</span></div>
+                      )}
+                      {req.licenseDoc && (
+                        <div className="mt-1">
+                          <a 
+                            href={req.licenseDoc.startsWith('http') ? req.licenseDoc : `http://localhost:5000${req.licenseDoc}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-primary font-bold hover:underline inline-flex items-center gap-1"
+                          >
+                            📄 View Driving License Photo
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Earnings & Actions */}
@@ -120,22 +148,28 @@ export const BookingRequests = () => {
                         onClick={() => handleAction(req._id, 'rejected')}
                       >
                         <X className="w-4 h-4 shrink-0" />
-                        Reject
+                        Reject Request
                       </Button>
                       
                       <Button
                         variant="primary"
                         size="sm"
                         className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
-                        onClick={() => handleAction(req._id, 'approved')}
+                        onClick={() => handleAction(req._id, 'owner_accepted')}
                       >
                         <Check className="w-4 h-4 shrink-0" />
-                        Approve
+                        Accept Request
                       </Button>
                     </div>
                   )}
 
-                  {req.status === 'approved' && (
+                  {req.status === 'owner_accepted' && (
+                    <span className="text-[11px] font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200">
+                      Waiting for Customer to submit DL & Pickup Details
+                    </span>
+                  )}
+
+                  {(req.status === 'confirmed' || req.status === 'approved') && (
                     <Button
                       variant="primary"
                       size="sm"
@@ -143,7 +177,7 @@ export const BookingRequests = () => {
                       onClick={() => handleAction(req._id, 'completed')}
                     >
                       <CheckCircle2 className="w-4 h-4 shrink-0" />
-                      Complete Ride
+                      Complete Rental
                     </Button>
                   )}
                 </div>

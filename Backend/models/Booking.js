@@ -19,12 +19,15 @@ const bookingSchema = new mongoose.Schema(
     },
     pickupDate: { type: Date, required: true },
     dropoffDate: { type: Date, required: true },
-    totalCost: { type: Number, required: true },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected', 'completed'],
+      enum: ['pending', 'owner_accepted', 'confirmed', 'approved', 'rejected', 'completed'],
       default: 'pending'
-    }
+    },
+    drivingLicense: { type: String, default: '' },
+    licenseDoc: { type: String, default: '' },
+    pickupLocation: { type: String, default: '' },
+    pickupNotes: { type: String, default: '' }
   },
   {
     timestamps: true

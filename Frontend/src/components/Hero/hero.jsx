@@ -69,17 +69,17 @@ export const Hero = ({ children }) => {
               {/* Floating badges around circle */}
               <div className="absolute -top-4 left-6 bg-slate-800 border border-slate-700/60 px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2 animate-bounce">
                 <span className="text-sm">🚗</span>
-                <span className="text-[11px] font-bold text-slate-200">Cars from $45/day</span>
+                <span className="text-[11px] font-bold text-slate-200">Cars from 1500/day</span>
               </div>
               
               <div className="absolute top-1/2 -right-8 bg-slate-800 border border-slate-700/60 px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
                 <span className="text-sm">🛵</span>
-                <span className="text-[11px] font-bold text-slate-200">Scooters from $15/day</span>
+                <span className="text-[11px] font-bold text-slate-200">Scooters from 300/day</span>
               </div>
 
               <div className="absolute -bottom-4 left-16 bg-slate-800 border border-slate-700/60 px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
                 <span className="text-sm">🚲</span>
-                <span className="text-[11px] font-bold text-slate-200">Bikes from $10/day</span>
+                <span className="text-[11px] font-bold text-slate-200">Bikes from 500/day</span>
               </div>
             </div>
           </div>
