@@ -1,44 +1,56 @@
 import nodemailer from "nodemailer";
-import dns from "node:dns/promises";
+import net from "node:net";
 
-// Create Gmail SMTP transporter
-const createTransporter = async () => {
-  // Explicitly resolve an IPv4 address
-  const addresses = await dns.resolve4("smtp.gmail.com");
-
-  console.log(`📡 Gmail SMTP IPv4: ${addresses[0]}`);
-
+// Create Gmail SMTP transporter using a forced IPv4 socket
+const createTransporter = () => {
   return nodemailer.createTransport({
-    host: addresses[0], // Use IPv4 directly
+    host: "smtp.gmail.com",
     port: 587,
     secure: false,
 
-    requireTLS: true,
+    getSocket: (options, callback) => {
+      const socket = net.connect({
+        host: "smtp.gmail.com",
+        port: 587,
+        family: 4,
+      });
+
+      socket.once("connect", () => {
+        callback(null, {
+          connection: socket,
+        });
+      });
+
+      socket.once("error", (error) => {
+        callback(error);
+      });
+    },
 
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
     },
 
-    // Important: connect to Gmail IP but use smtp.gmail.com for TLS
-    tls: {
-      servername: "smtp.gmail.com",
-    },
+    requireTLS: true,
 
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
+    connectionTimeout: 20000,
+    greetingTimeout: 20000,
     socketTimeout: 30000,
   });
 };
 
-// Send email
+/**
+ * Send email using Gmail SMTP
+ */
 export const sendEmail = async ({ to, subject, text, html }) => {
   try {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-      throw new Error("EMAIL_USER or EMAIL_PASSWORD is missing");
+      throw new Error(
+        "EMAIL_USER or EMAIL_PASSWORD is missing"
+      );
     }
 
-    const transporter = await createTransporter();
+    const transporter = createTransporter();
 
     const info = await transporter.sendMail({
       from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
@@ -52,15 +64,19 @@ export const sendEmail = async ({ to, subject, text, html }) => {
         </div>`,
     });
 
-    console.log(`✅ Email sent successfully to: ${to}`);
+    console.log(
+      `✅ Email sent successfully to: ${to}`
+    );
 
     return {
       success: true,
-      info,
       messageId: info.messageId,
     };
   } catch (error) {
-    console.error("❌ Gmail SMTP Email sending failed:", error.message);
+    console.error(
+      "❌ Gmail SMTP Email sending failed:",
+      error.message
+    );
 
     return {
       success: false,
