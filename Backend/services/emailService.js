@@ -1,9 +1,8 @@
 import nodemailer from "nodemailer";
 import dns from "dns";
+import { promisify } from "util";
 
-const customLookup = (hostname, options, callback) => {
-  return dns.lookup(hostname, { family: 4 }, callback);
-};
+const lookupIPv4 = promisify((hostname, cb) => dns.lookup(hostname, { family: 4 }, cb));
 
 export const sendEmail = async ({ to, subject, text, html }) => {
   try {
@@ -22,40 +21,37 @@ export const sendEmail = async ({ to, subject, text, html }) => {
       };
     }
 
-    const host = process.env.EMAIL_HOST || "smtp.gmail.com";
+    const rawHost = process.env.EMAIL_HOST || "smtp.gmail.com";
     const port = Number(process.env.EMAIL_PORT) || 465;
-    const isGmail = host.includes("gmail");
 
-    const transportConfig = isGmail
-      ? {
-          service: "gmail",
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASSWORD,
-          },
-          lookup: customLookup,
-          connectionTimeout: 15000,
-          greetingTimeout: 15000,
-          socketTimeout: 15000
-        }
-      : {
-          host: host,
-          port: port,
-          secure: port === 465,
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASSWORD,
-          },
-          lookup: customLookup,
-          connectionTimeout: 15000,
-          greetingTimeout: 15000,
-          socketTimeout: 15000,
-          tls: {
-            rejectUnauthorized: false
-          }
-        };
+    // Resolve hostname explicitly to an IPv4 IP address string
+    let resolvedHost = rawHost;
+    try {
+      const ipv4 = await lookupIPv4(rawHost);
+      if (ipv4) {
+        resolvedHost = ipv4;
+        console.log(`🌐 Resolved ${rawHost} -> IPv4 ${resolvedHost}`);
+      }
+    } catch (dnsErr) {
+      console.warn(`⚠️ DNS IPv4 lookup warning for ${rawHost}:`, dnsErr.message);
+    }
 
-    const transporter = nodemailer.createTransport(transportConfig);
+    const transporter = nodemailer.createTransport({
+      host: resolvedHost,
+      port: port,
+      secure: port === 465,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+      tls: {
+        rejectUnauthorized: false,
+        servername: rawHost
+      },
+      connectionTimeout: 20000,
+      greetingTimeout: 20000,
+      socketTimeout: 20000
+    });
 
     const info = await transporter.sendMail({
       from:
