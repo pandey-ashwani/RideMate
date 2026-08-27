@@ -6,7 +6,7 @@ import TouchButton from '../../components/Common/TouchButton';
 import CustomInput from '../../components/Common/CustomInput';
 
 export const LoginScreen = ({ navigation }) => {
-  const { login, forgotPassword, resetPassword } = useAuth();
+  const { login, forgotPassword, resetPassword, resendOtp } = useAuth();
   const [role, setRole] = useState('customer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,6 +22,15 @@ export const LoginScreen = ({ navigation }) => {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSuccess, setForgotSuccess] = useState('');
   const [devOtpCode, setDevOtpCode] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  React.useEffect(() => {
+    let timer;
+    if (resendCooldown > 0) {
+      timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -102,6 +111,24 @@ export const LoginScreen = ({ navigation }) => {
       setError('');
     } else {
       setError(res.message || 'Failed to reset password.');
+    }
+  };
+
+  const handleResendResetCode = async () => {
+    if (resendCooldown > 0) return;
+    setError('');
+    setForgotSuccess('');
+    setForgotLoading(true);
+
+    const res = await resendOtp(forgotEmail.trim());
+    setForgotLoading(false);
+
+    if (res.success) {
+      if (res.devOtp) setDevOtpCode(String(res.devOtp));
+      setForgotSuccess(res.message || 'A new reset code has been sent to your email.');
+      setResendCooldown(60);
+    } else {
+      setError(res.message || 'Failed to resend reset code.');
     }
   };
 
@@ -216,6 +243,16 @@ export const LoginScreen = ({ navigation }) => {
                       loading={forgotLoading}
                       style={{ marginTop: 8 }}
                     />
+
+                    <TouchableOpacity
+                      disabled={resendCooldown > 0 || forgotLoading}
+                      onPress={handleResendResetCode}
+                      style={{ alignSelf: 'center', marginTop: 12 }}
+                    >
+                      <Text style={{ fontSize: 12, fontWeight: '700', color: resendCooldown > 0 ? '#94A3B8' : '#0284C7' }}>
+                        {resendCooldown > 0 ? `Resend Code in ${resendCooldown}s` : "Didn't receive code? Resend Code"}
+                      </Text>
+                    </TouchableOpacity>
                   </>
                 )}
 

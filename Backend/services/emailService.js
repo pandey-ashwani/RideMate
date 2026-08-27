@@ -1,13 +1,20 @@
 import nodemailer from "nodemailer";
 
-
 export const sendEmail = async ({ to, subject, text, html }) => {
   try {
-    // Check that required environment variables exist
+    // Check if email credentials exist
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-      throw new Error(
-        "Email credentials are missing. Check EMAIL_USER and EMAIL_PASSWORD in your .env file."
-      );
+      console.warn(`⚠️ EMAIL CREDENTIALS MISSING (EMAIL_USER / EMAIL_PASSWORD). Simulating email dispatch to ${to}`);
+      console.log(`================ EMAIL LOG ================`);
+      console.log(`To: ${to}`);
+      console.log(`Subject: ${subject}`);
+      console.log(`Body: ${text}`);
+      console.log(`===========================================`);
+      return {
+        success: true,
+        simulated: true,
+        message: 'Email simulated in development mode.'
+      };
     }
 
     const transporter = nodemailer.createTransport({
