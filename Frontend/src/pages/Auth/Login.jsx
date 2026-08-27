@@ -5,19 +5,28 @@ import { Navbar } from '../../components/Navbar/navbar';
 import { Footer } from '../../Footer/footer';
 import { Button } from '../../components/Common/Button';
 import { Input } from '../../components/Common/Input';
-import { Mail, Lock, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, ShieldAlert, CheckCircle2, ArrowLeft, KeyRound } from 'lucide-react';
 
 export const Login = () => {
-  const { login } = useAuth();
+  const { login, forgotPassword, resetPassword } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('customer'); // Default role
+  const [role, setRole] = useState('customer');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Forgot Password Mode States
+  const [isForgotMode, setIsForgotMode] = useState(false);
+  const [forgotStep, setForgotStep] = useState('email'); // 'email' | 'reset'
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotOtp, setForgotOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [devOtpCode, setDevOtpCode] = useState('');
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -34,16 +43,68 @@ export const Login = () => {
       setTimeout(() => {
         const redirect = searchParams.get('redirect');
         if (redirect === 'book') {
-          navigate(-1); // Go back to vehicle book modal
+          navigate(-1);
         } else {
-          // Redirect to appropriate dashboard
           if (role === 'admin') navigate('/admin');
           else if (role === 'owner') navigate('/owner');
           else navigate('/dashboard');
         }
-      }, 1500);
+      }, 1200);
     } else {
       setError(res.message || 'Login failed. Please check your credentials.');
+    }
+  };
+
+  const handleSendResetCode = async (e) => {
+    e.preventDefault();
+    if (!forgotEmail || !forgotEmail.includes('@')) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    setError('');
+    setSuccessMsg('');
+    setForgotLoading(true);
+
+    const res = await forgotPassword(forgotEmail.trim());
+    setForgotLoading(false);
+
+    if (res.success) {
+      if (res.devOtp) setDevOtpCode(String(res.devOtp));
+      setForgotStep('reset');
+      setSuccessMsg(res.message || 'Reset code sent to your email.');
+    } else {
+      setError(res.message || 'Failed to send password reset code.');
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (!forgotOtp || forgotOtp.trim().length !== 6) {
+      setError('Please enter the 6-digit verification code.');
+      return;
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      setError('New password must be at least 6 characters long.');
+      return;
+    }
+
+    setError('');
+    setSuccessMsg('');
+    setForgotLoading(true);
+
+    const res = await resetPassword(forgotEmail.trim(), forgotOtp.trim(), newPassword);
+    setForgotLoading(false);
+
+    if (res.success) {
+      setSuccessMsg('Password reset successfully! Please log in with your new password.');
+      setEmail(forgotEmail);
+      setPassword('');
+      setIsForgotMode(false);
+      setError('');
+    } else {
+      setError(res.message || 'Failed to reset password.');
     }
   };
 
@@ -52,95 +113,198 @@ export const Login = () => {
       <Navbar />
 
       <main className="flex-grow flex items-center justify-center py-16 px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl border border-slate-100 shadow-xl p-8 flex flex-col gap-6">
-          <div className="text-center flex flex-col gap-2">
-            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Welcome Back</h2>
-            <p className="text-xs font-semibold text-slate-400">Sign in to manage your bookings and rides</p>
-          </div>
+        <div className="w-full max-w-md bg-white rounded-2xl border border-slate-100 shadow-xl p-8 flex flex-col gap-6 text-left">
+          
+          {isForgotMode ? (
+            <>
+              <div className="text-center flex flex-col gap-2">
+                <h2 className="text-2xl font-black text-slate-800 tracking-tight">Reset Password</h2>
+                <p className="text-xs font-semibold text-slate-400">
+                  {forgotStep === 'email'
+                    ? 'Enter your registered email address to receive a 6-digit reset code.'
+                    : `Enter the code sent to ${forgotEmail} and your new password.`}
+                </p>
+              </div>
 
-          {/* Role selector Tabs */}
-          <div className="flex border-b border-slate-100">
-            {['customer', 'owner', 'admin'].map((roleType) => (
+              {error && (
+                <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-lg text-xs font-semibold">
+                  <ShieldAlert className="w-4.5 h-4.5 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {successMsg && (
+                <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 p-3.5 rounded-lg text-xs font-semibold">
+                  <CheckCircle2 className="w-4.5 h-4.5 shrink-0" />
+                  <span>{successMsg}</span>
+                </div>
+              )}
+
+              {devOtpCode && forgotStep === 'reset' && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-xs font-bold text-center">
+                  🔑 Development Reset Code: <span className="tracking-widest text-base font-black">{devOtpCode}</span>
+                </div>
+              )}
+
+              {forgotStep === 'email' ? (
+                <form onSubmit={handleSendResetCode} className="flex flex-col gap-4">
+                  <Input
+                    label="Email Address"
+                    type="email"
+                    placeholder="e.g. john@example.com"
+                    required
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    icon={Mail}
+                  />
+
+                  <Button type="submit" variant="primary" loading={forgotLoading} className="w-full py-3 mt-2 font-bold shadow-md">
+                    Send Reset Code
+                  </Button>
+                </form>
+              ) : (
+                <form onSubmit={handleResetPasswordSubmit} className="flex flex-col gap-4">
+                  <Input
+                    label="6-Digit Verification Code"
+                    type="text"
+                    placeholder="123456"
+                    required
+                    maxLength={6}
+                    value={forgotOtp}
+                    onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, ''))}
+                    icon={KeyRound}
+                  />
+
+                  <Input
+                    label="New Password"
+                    type="password"
+                    placeholder="••••••••"
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    icon={Lock}
+                  />
+
+                  <Button type="submit" variant="primary" loading={forgotLoading} className="w-full py-3 mt-2 font-bold shadow-md">
+                    Reset Password & Save
+                  </Button>
+                </form>
+              )}
+
               <button
-                key={roleType}
+                type="button"
                 onClick={() => {
-                  if (!successMsg) setRole(roleType);
+                  setIsForgotMode(false);
+                  setError('');
                 }}
-                disabled={!!successMsg}
-                className={`
-                  flex-1 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer
-                  ${role === roleType 
-                    ? 'border-primary text-primary' 
-                    : 'border-transparent text-slate-400 hover:text-slate-600'
-                  }
-                  ${successMsg ? 'opacity-50 cursor-not-allowed' : ''}
-                `}
+                className="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1 mt-2"
               >
-                {roleType}
+                <ArrowLeft className="w-4 h-4" /> Back to Sign In
               </button>
-            ))}
-          </div>
+            </>
+          ) : (
+            <>
+              <div className="text-center flex flex-col gap-2">
+                <h2 className="text-2xl font-black text-slate-800 tracking-tight">Welcome Back</h2>
+                <p className="text-xs font-semibold text-slate-400">Sign in to manage your bookings and rides</p>
+              </div>
 
-          {role === 'admin' && (
-            <div className="bg-blue-50 border border-blue-200/60 p-3 rounded-lg text-blue-800 text-[11px] font-semibold flex flex-col gap-0.5 text-left">
-              <span className="font-extrabold uppercase tracking-wide text-blue-900">Platform Admin Access</span>
-              <p>Default Admin: <span className="font-mono bg-blue-100/80 px-1 py-0.5 rounded text-blue-900">admin@ridemate.com</span> | Pass: <span className="font-mono bg-blue-100/80 px-1 py-0.5 rounded text-blue-900">adminpassword123</span></p>
-            </div>
+              {/* Role selector Tabs */}
+              <div className="flex border-b border-slate-100">
+                {['customer', 'owner', 'admin'].map((roleType) => (
+                  <button
+                    key={roleType}
+                    onClick={() => {
+                      if (!successMsg) setRole(roleType);
+                    }}
+                    disabled={!!successMsg}
+                    className={`
+                      flex-1 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer
+                      ${role === roleType 
+                        ? 'border-primary text-primary' 
+                        : 'border-transparent text-slate-400 hover:text-slate-600'
+                      }
+                      ${successMsg ? 'opacity-50 cursor-not-allowed' : ''}
+                    `}
+                  >
+                    {roleType}
+                  </button>
+                ))}
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-lg text-xs font-semibold">
+                  <ShieldAlert className="w-4.5 h-4.5 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {successMsg && (
+                <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 p-3.5 rounded-lg text-xs font-semibold">
+                  <CheckCircle2 className="w-4.5 h-4.5 shrink-0" />
+                  <span>{successMsg}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleLogin} className="flex flex-col gap-4">
+                <Input
+                  label="Email Address"
+                  type="email"
+                  placeholder="e.g. customer@ridemate.com"
+                  required
+                  disabled={loading || !!successMsg}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  icon={Mail}
+                />
+
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Password</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsForgotMode(true);
+                        setForgotStep('email');
+                        setForgotEmail(email);
+                        setError('');
+                        setSuccessMsg('');
+                      }}
+                      className="text-xs font-bold text-primary hover:underline"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    required
+                    disabled={loading || !!successMsg}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    icon={Lock}
+                  />
+                </div>
+
+                <Button 
+                  type="submit" 
+                  variant="primary" 
+                  disabled={loading || !!successMsg}
+                  className="w-full py-3 mt-2 font-bold shadow-md cursor-pointer"
+                >
+                  {loading ? 'Signing In...' : 'Sign In'}
+                </Button>
+              </form>
+
+              <p className="text-center text-xs font-semibold text-slate-500">
+                Don't have an account?{' '}
+                <Link to={`/register?role=${role}`} className="text-primary hover:underline">
+                  Create an account
+                </Link>
+              </p>
+            </>
           )}
 
-          {error && (
-            <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-lg text-xs font-semibold">
-              <ShieldAlert className="w-4.5 h-4.5 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {successMsg && (
-            <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 p-3.5 rounded-lg text-xs font-semibold animate-fade-in-up">
-              <CheckCircle2 className="w-4.5 h-4.5 shrink-0" />
-              <span>{successMsg}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
-            <Input
-              label="Email Address"
-              type="email"
-              placeholder="e.g. customer@ridemate.com"
-              required
-              disabled={loading || !!successMsg}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              icon={Mail}
-            />
-
-            <Input
-              label="Password"
-              type="password"
-              placeholder="••••••••"
-              required
-              disabled={loading || !!successMsg}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              icon={Lock}
-            />
-
-            <Button 
-              type="submit" 
-              variant="primary" 
-              disabled={loading || !!successMsg}
-              className="w-full py-3 mt-2 font-bold shadow-md cursor-pointer"
-            >
-              {loading ? 'Signing In...' : 'Sign In'}
-            </Button>
-          </form>
-
-          <p className="text-center text-xs font-semibold text-slate-500">
-            Don't have an account?{' '}
-            <Link to={`/register?role=${role}`} className="text-primary hover:underline">
-              Create an account
-            </Link>
-          </p>
         </div>
       </main>
 

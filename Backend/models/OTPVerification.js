@@ -5,17 +5,23 @@ const otpVerificationSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: false
+    },
+    email: {
+      type: String,
+      required: true,
+      index: true,
+      lowercase: true,
+      trim: true
     },
     identifier: {
       type: String,
-      required: true,
       index: true
     },
     type: {
       type: String,
-      enum: ['phone', 'email'],
-      required: true
+      enum: ['email', 'phone'],
+      default: 'email'
     },
     otpHash: {
       type: String,
@@ -24,7 +30,7 @@ const otpVerificationSchema = new mongoose.Schema(
     expiresAt: {
       type: Date,
       required: true,
-      index: { expireAfterSeconds: 0 } // MongoDB TTL Index
+      index: { expireAfterSeconds: 0 } // MongoDB TTL Index for auto cleanup
     },
     attempts: {
       type: Number,
@@ -37,6 +43,14 @@ const otpVerificationSchema = new mongoose.Schema(
     resendCount: {
       type: Number,
       default: 0
+    },
+    purpose: {
+      type: String,
+      default: 'verification'
+    },
+    used: {
+      type: Boolean,
+      default: false
     }
   },
   {
@@ -44,8 +58,8 @@ const otpVerificationSchema = new mongoose.Schema(
   }
 );
 
-// Compound index for fast lookup and rate limit enforcement
-otpVerificationSchema.index({ user: 1, type: 1 });
+// Indexes for fast query resolution
+otpVerificationSchema.index({ email: 1, used: 1 });
 otpVerificationSchema.index({ identifier: 1, type: 1 });
 
 const OTPVerification = mongoose.model('OTPVerification', otpVerificationSchema);

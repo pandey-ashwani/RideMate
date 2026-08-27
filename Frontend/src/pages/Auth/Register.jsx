@@ -11,7 +11,7 @@ import { TermsContent } from '../TermsPage';
 import { User, Mail, Lock, ShieldAlert, Phone, Building, CheckCircle2 } from 'lucide-react';
 
 export const Register = () => {
-  const { register } = useAuth();
+  const { register, verifyOtp } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -34,11 +34,19 @@ export const Register = () => {
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Sync role with query param if present
+  // Sync role or verify mode with query params if present
   useEffect(() => {
     const roleParam = searchParams.get('role');
     if (roleParam === 'owner' || roleParam === 'customer') {
       setRole(roleParam);
+    }
+
+    const isVerifyMode = searchParams.get('verify') === 'true';
+    const emailParam = searchParams.get('email');
+    if (isVerifyMode && emailParam) {
+      setRegisteredUserEmail(decodeURIComponent(emailParam));
+      setShowOtpStep(true);
+      setSuccessMsg('Account verification required. Please enter the 6-digit OTP code sent to your contact email.');
     }
   }, [searchParams]);
 
@@ -53,6 +61,7 @@ export const Register = () => {
   const [resendCooldown, setResendCooldown] = useState(60); // 60s cooldown
   const [registeredUserEmail, setRegisteredUserEmail] = useState('');
   const [registeredUserRole, setRegisteredUserRole] = useState('');
+  const [devOtpCode, setDevOtpCode] = useState('');
 
   // Countdown timer for OTP
   useEffect(() => {
@@ -91,8 +100,13 @@ export const Register = () => {
       return;
     }
 
-    if (role === 'owner' && (!company || !phone)) {
-      setError('Company name and Mobile number are required for vehicle owners.');
+    if (role === 'owner' && (!phone || phone.trim().length < 10)) {
+      setError('A valid 10-digit mobile number is required for vehicle owners.');
+      return;
+    }
+
+    if (role === 'owner' && !company) {
+      setError('Company name is required for vehicle owners.');
       return;
     }
 
@@ -120,7 +134,7 @@ export const Register = () => {
       setRegisteredUserEmail(res.user?.email || email);
       setRegisteredUserRole(res.user?.role || role);
       setShowOtpStep(true);
-      setSuccessMsg('Account created! Enter the 6-digit OTP sent to your contact details.');
+      setSuccessMsg('Account created! Enter the 6-digit verification code sent to your email.');
     } else {
       setError(res.message || 'Registration failed. Please check your inputs.');
     }
@@ -137,15 +151,10 @@ export const Register = () => {
     }
 
     setOtpLoading(true);
-    try {
-      await apiRequest('/auth/verify-otp', {
-        method: 'POST',
-        body: JSON.stringify({
-          email: registeredUserEmail || email,
-          otp: otpValue.trim()
-        })
-      });
+    const res = await verifyOtp(registeredUserEmail || email, otpValue.trim());
+    setOtpLoading(false);
 
+    if (res.success) {
       setSuccessMsg('OTP verified successfully! Redirecting...');
       setTimeout(() => {
         if ((registeredUserRole || role) === 'owner') {
@@ -154,10 +163,8 @@ export const Register = () => {
           navigate('/dashboard');
         }
       }, 1200);
-    } catch (err) {
-      setError(err.message || 'OTP verification failed.');
-    } finally {
-      setOtpLoading(false);
+    } else {
+      setError(res.message || 'OTP verification failed.');
     }
   };
 
@@ -166,10 +173,11 @@ export const Register = () => {
     setError('');
     setSuccessMsg('');
     try {
-      await apiRequest('/auth/resend-otp', {
+      const resData = await apiRequest('/auth/resend-otp', {
         method: 'POST',
         body: JSON.stringify({ email: registeredUserEmail || email })
       });
+      if (resData.devOtp) setDevOtpCode(resData.devOtp);
       setSuccessMsg('A new 6-digit OTP code has been sent.');
       setResendCooldown(60);
       setOtpTimer(300);
@@ -302,30 +310,28 @@ export const Register = () => {
               icon={Mail}
             />
 
+            <Input
+              label={role === 'owner' ? "Mobile Number" : "Mobile Number (Optional)"}
+              type="tel"
+              placeholder="e.g. 9876543210"
+              required={role === 'owner'}
+              disabled={loading || !!successMsg}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              icon={Phone}
+            />
+
             {role === 'owner' && (
-              <>
-                <Input
-                  label="Company Name"
-                  type="text"
-                  placeholder="e.g. JD Eco Rentals"
-                  required
-                  disabled={loading || !!successMsg}
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  icon={Building}
-                />
-                
-                <Input
-                  label="Phone Number"
-                  type="tel"
-                  placeholder="e.g. +1 (555) 000-0000"
-                  required
-                  disabled={loading || !!successMsg}
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  icon={Phone}
-                />
-              </>
+              <Input
+                label="Company Name"
+                type="text"
+                placeholder="e.g. JD Eco Rentals"
+                required
+                disabled={loading || !!successMsg}
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                icon={Building}
+              />
             )}
 
             <div className="flex flex-col gap-1.5 text-left">

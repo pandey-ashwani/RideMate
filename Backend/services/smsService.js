@@ -1,55 +1,66 @@
-// SMS Service supporting MSG91, Twilio, Exotel, and Dev Console
+// SMS Service supporting Twilio, Fast2SMS, MSG91, Exotel, and Dev Console
 
 export const sendSMS = async (toPhone, text) => {
-  const provider = process.env.SMS_PROVIDER || 'console';
+  let provider = process.env.SMS_PROVIDER;
   const isProduction = process.env.NODE_ENV === 'production';
+
+  // Auto-detect provider if not explicitly configured
+  if (!provider) {
+    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+      provider = 'twilio';
+    } else if (process.env.FAST2SMS_API_KEY) {
+      provider = 'fast2sms';
+    } else if (process.env.MSG91_AUTH_KEY) {
+      provider = 'msg91';
+    } else if (process.env.EXOTEL_ACCOUNT_SID) {
+      provider = 'exotel';
+    } else {
+      provider = 'console';
+    }
+  }
 
   if (provider === 'console') {
     if (isProduction) {
       console.error('[SMS ERROR] SMS_PROVIDER=console is forbidden in production!');
       return { success: false, error: 'Console provider forbidden in production' };
     }
-    console.log(`[DEV SMS] To: ${toPhone} | Message: ${text}`);
+    console.log(`[SMS LOG] To: ${toPhone} | Message: ${text}`);
     return { success: true, provider: 'console' };
   }
 
   try {
-    if (provider === 'msg91') {
-      const authKey = process.env.MSG91_AUTH_KEY;
-      const senderId = process.env.MSG91_SENDER_ID;
-      const templateId = process.env.MSG91_TEMPLATE_ID;
+    // 1. Fast2SMS Provider (India Quick OTP)
+    if (provider === 'fast2sms') {
+      const apiKey = process.env.FAST2SMS_API_KEY;
+      if (!apiKey) throw new Error('Missing FAST2SMS_API_KEY configuration');
 
-      if (!authKey || !senderId) {
-        throw new Error('Missing MSG91 configuration credentials');
-      }
+      // Extract raw 10 digit number
+      const cleanNumber = toPhone.replace('+91', '').replace(/\D/g, '');
 
-      const response = await fetch('https://control.msg91.com/api/v5/flow/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'authkey': authKey
-        },
-        body: JSON.stringify({
-          template_id: templateId,
-          sender: senderId,
-          recipients: [{ mobiles: toPhone.replace('+', ''), message: text }]
-        })
+      // Extract OTP digits from message text
+      const otpMatch = text.match(/\b\d{6}\b/);
+      const otpCode = otpMatch ? otpMatch[0] : text;
+
+      const response = await fetch(`https://www.fast2sms.com/dev/bulkV2?authorization=${apiKey}&route=otp&variables_values=${otpCode}&numbers=${cleanNumber}`, {
+        method: 'GET'
       });
 
       const resData = await response.json();
-      if (!response.ok) {
-        throw new Error(resData.message || 'MSG91 API error');
+      if (!response.ok || resData.return === false) {
+        throw new Error(resData.message || 'Fast2SMS API error');
       }
-      return { success: true, provider: 'msg91', resData };
+      console.log(`[SMS SUCCESS] Sent via Fast2SMS to ${toPhone}`);
+      return { success: true, provider: 'fast2sms', resData };
     }
 
+    // 2. Twilio Provider
     if (provider === 'twilio') {
       const accountSid = process.env.TWILIO_ACCOUNT_SID;
       const authToken = process.env.TWILIO_AUTH_TOKEN;
       const fromPhone = process.env.TWILIO_PHONE_NUMBER;
 
       if (!accountSid || !authToken || !fromPhone) {
-        throw new Error('Missing Twilio configuration credentials');
+        throw new Error('Missing Twilio credentials (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)');
       }
 
       const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
@@ -71,9 +82,40 @@ export const sendSMS = async (toPhone, text) => {
       if (!response.ok) {
         throw new Error(resData.message || 'Twilio API error');
       }
+      console.log(`[SMS SUCCESS] Sent via Twilio to ${toPhone}`);
       return { success: true, provider: 'twilio', resData };
     }
 
+    // 3. MSG91 Provider
+    if (provider === 'msg91') {
+      const authKey = process.env.MSG91_AUTH_KEY;
+      const senderId = process.env.MSG91_SENDER_ID || 'RIDEMT';
+      const templateId = process.env.MSG91_TEMPLATE_ID;
+
+      if (!authKey) throw new Error('Missing MSG91_AUTH_KEY credentials');
+
+      const response = await fetch('https://control.msg91.com/api/v5/flow/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'authkey': authKey
+        },
+        body: JSON.stringify({
+          template_id: templateId,
+          sender: senderId,
+          recipients: [{ mobiles: toPhone.replace('+', ''), message: text }]
+        })
+      });
+
+      const resData = await response.json();
+      if (!response.ok) {
+        throw new Error(resData.message || 'MSG91 API error');
+      }
+      console.log(`[SMS SUCCESS] Sent via MSG91 to ${toPhone}`);
+      return { success: true, provider: 'msg91', resData };
+    }
+
+    // 4. Exotel Provider
     if (provider === 'exotel') {
       const accountSid = process.env.EXOTEL_ACCOUNT_SID;
       const apiKey = process.env.EXOTEL_API_KEY;
@@ -102,6 +144,7 @@ export const sendSMS = async (toPhone, text) => {
       if (!response.ok) {
         throw new Error(resData.RestException?.Message || 'Exotel API error');
       }
+      console.log(`[SMS SUCCESS] Sent via Exotel to ${toPhone}`);
       return { success: true, provider: 'exotel', resData };
     }
 

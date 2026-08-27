@@ -15,7 +15,17 @@ export const getVehicles = async (req, res, next) => {
     if (req.query.ownerId) {
       query.ownerId = req.query.ownerId;
     } else {
-      query.status = 'approved'; // Public catalog shows approved vehicles only
+      // Find all owners verified and approved by admin
+      const verifiedOwners = await User.find({
+        role: 'owner',
+        $or: [{ isVerified: true }, { verificationStatus: 'approved' }]
+      }).select('_id');
+
+      const verifiedOwnerIds = verifiedOwners.map(o => o._id);
+
+      // PUBLIC CUSTOMER DASHBOARD GUARD: Only show vehicles owned by admin-verified owners
+      query.ownerId = { $in: verifiedOwnerIds };
+      query.status = { $ne: 'rejected' };
     }
 
     // Keyword Search (brand, name, location)
@@ -49,6 +59,7 @@ export const getVehicles = async (req, res, next) => {
 
     const count = await Vehicle.countDocuments(query);
     const vehicles = await Vehicle.find(query)
+      .populate('ownerId', 'name company email phone isVerified verificationStatus')
       .limit(pageSize)
       .skip(pageSize * (page - 1))
       .sort({ createdAt: -1 });
@@ -69,16 +80,14 @@ export const getVehicles = async (req, res, next) => {
 // @access  Public
 export const getVehicleById = async (req, res, next) => {
   try {
-    const vehicle = await Vehicle.findById(req.query.id || req.params.id)
-      .populate('ownerId', 'name company email avatar phone joinedDate');
+    const vehicle = await Vehicle.findById(req.params.id)
+      .populate('ownerId', 'name company email phone isVerified verificationStatus');
 
     if (vehicle) {
-      // Get associated reviews
-      const reviews = await Review.find({ vehicleId: vehicle._id }).sort({ createdAt: -1 });
-      res.json({ vehicle, reviews });
+      res.json(vehicle);
     } else {
       res.status(404);
-      throw new Error('Vehicle listing not found');
+      throw new Error('Vehicle not found');
     }
   } catch (error) {
     next(error);
@@ -92,9 +101,13 @@ export const createVehicle = async (req, res, next) => {
   const { name, brand, type, pricePerDay, image, specs, location, description } = req.body;
 
   try {
-    // If user is owner, check if verified
     const owner = await User.findById(req.user._id);
-    const isApproved = owner.role === 'admin' || owner.isVerified;
+
+    // STRICT OWNER VERIFICATION GUARD: No vehicle can be listed without admin verification
+    if (owner.role !== 'admin' && !owner.isVerified && owner.verificationStatus !== 'approved') {
+      res.status(403);
+      throw new Error('Account Verification Required: You must be verified & approved by an administrator before listing vehicles.');
+    }
 
     const vehicle = new Vehicle({
       name,
@@ -105,8 +118,7 @@ export const createVehicle = async (req, res, next) => {
       specs: specs || { transmission: 'Automatic', fuel: 'Electric', seats: 4, range: '250 miles' },
       ownerId: req.user._id,
       location,
-      description,
-      status: isApproved ? 'approved' : 'pending' // Pending validation if owner unverified
+      status: 'approved'
     });
 
     const createdVehicle = await vehicle.save();
@@ -140,13 +152,13 @@ export const updateVehicle = async (req, res, next) => {
       vehicle.specs = specs || vehicle.specs;
       vehicle.location = location || vehicle.location;
       vehicle.description = description || vehicle.description;
-      vehicle.availability = availability !== undefined ? availability : vehicle.availability;
+      if (availability !== undefined) vehicle.availability = availability;
 
       const updatedVehicle = await vehicle.save();
       res.json(updatedVehicle);
     } else {
       res.status(404);
-      throw new Error('Vehicle not found');
+      throw new Error('Vehicle listing not found');
     }
   } catch (error) {
     next(error);
@@ -161,14 +173,59 @@ export const deleteVehicle = async (req, res, next) => {
     const vehicle = await Vehicle.findById(req.params.id);
 
     if (vehicle) {
-      // Security: Only Listing Owner or Admin can delete
       if (vehicle.ownerId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
         res.status(403);
         throw new Error('Not authorized to delete this vehicle listing');
       }
 
-      await Vehicle.deleteOne({ _id: vehicle._id });
+      await vehicle.deleteOne();
       res.json({ message: 'Vehicle listing removed successfully' });
+    } else {
+      res.status(404);
+      throw new Error('Vehicle listing not found');
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Create new review for a vehicle
+// @route   POST /api/vehicles/:id/reviews
+// @access  Private
+export const createVehicleReview = async (req, res, next) => {
+  const { rating, comment } = req.body;
+
+  try {
+    const vehicle = await Vehicle.findById(req.params.id);
+
+    if (vehicle) {
+      const alreadyReviewed = await Review.findOne({
+        vehicleId: req.params.id,
+        userId: req.user._id
+      });
+
+      if (alreadyReviewed) {
+        res.status(400);
+        throw new Error('You have already reviewed this vehicle');
+      }
+
+      const review = new Review({
+        vehicleId: req.params.id,
+        userId: req.user._id,
+        userName: req.user.name,
+        rating: Number(rating),
+        comment
+      });
+
+      await review.save();
+
+      // Recalculate average rating & review count
+      const reviews = await Review.find({ vehicleId: req.params.id });
+      vehicle.numReviews = reviews.length;
+      vehicle.rating = reviews.reduce((acc, item) => item.rating + acc, 0) / reviews.length;
+
+      await vehicle.save();
+      res.status(201).json({ message: 'Review added successfully' });
     } else {
       res.status(404);
       throw new Error('Vehicle not found');
@@ -178,49 +235,13 @@ export const deleteVehicle = async (req, res, next) => {
   }
 };
 
-// @desc    Create a vehicle review
-// @route   POST /api/vehicles/:id/reviews
-// @access  Private (Customer)
-export const createVehicleReview = async (req, res, next) => {
-  const { rating, text } = req.body;
-
+// @desc    Get reviews for a vehicle
+// @route   GET /api/vehicles/:id/reviews
+// @access  Public
+export const getVehicleReviews = async (req, res, next) => {
   try {
-    const vehicle = await Vehicle.findById(req.params.id);
-
-    if (vehicle) {
-      // Check if user already reviewed
-      const alreadyReviewed = await Review.findOne({
-        vehicleId: vehicle._id,
-        customerId: req.user._id
-      });
-
-      if (alreadyReviewed) {
-        res.status(400);
-        throw new Error('Vehicle already reviewed by this user');
-      }
-
-      const review = new Review({
-        vehicleId: vehicle._id,
-        customerId: req.user._id,
-        customerName: req.user.name,
-        rating: Number(rating),
-        text
-      });
-
-      await review.save();
-
-      // Recalculate average rating
-      const reviews = await Review.find({ vehicleId: vehicle._id });
-      vehicle.reviewCount = reviews.length;
-      const totalScore = reviews.reduce((sum, r) => sum + r.rating, 0);
-      vehicle.rating = Number((totalScore / reviews.length).toFixed(1));
-
-      await vehicle.save();
-      res.status(201).json({ message: 'Review added successfully', review });
-    } else {
-      res.status(404);
-      throw new Error('Vehicle not found');
-    }
+    const reviews = await Review.find({ vehicleId: req.params.id }).sort({ createdAt: -1 });
+    res.json(reviews);
   } catch (error) {
     next(error);
   }

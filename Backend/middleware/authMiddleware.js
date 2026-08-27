@@ -30,6 +30,12 @@ export const protect = async (req, res, next) => {
         throw new Error('User account is deactivated. Contact administrator');
       }
 
+      // Check if non-admin user has completed OTP verification
+      if (req.user.role !== 'admin' && !req.user.emailVerified && !req.user.phoneVerified) {
+        res.status(403);
+        throw new Error('Account contact is unverified. Please complete 6-digit OTP verification.');
+      }
+
       next();
     } catch (error) {
       console.error(error);

@@ -123,7 +123,17 @@ export const getMyBookings = async (req, res, next) => {
       .populate('vehicleId', 'name brand type image pricePerDay location')
       .sort({ createdAt: -1 });
 
-    res.json(bookings);
+    const formattedBookings = bookings.map(b => {
+      const bObj = b.toObject();
+      if (!bObj.totalCost || bObj.totalCost === 0) {
+        const days = Math.ceil((new Date(b.dropoffDate) - new Date(b.pickupDate)) / (1000 * 60 * 60 * 24)) || 1;
+        const rate = b.vehicleId?.pricePerDay || 0;
+        bObj.totalCost = days * rate;
+      }
+      return bObj;
+    });
+
+    res.json(formattedBookings);
   } catch (error) {
     next(error);
   }
@@ -139,7 +149,17 @@ export const getOwnerRequests = async (req, res, next) => {
       .populate('customerId', 'name email avatar phone drivingLicense licenseDoc')
       .sort({ createdAt: -1 });
 
-    res.json(bookings);
+    const formattedBookings = bookings.map(b => {
+      const bObj = b.toObject();
+      if (!bObj.totalCost || bObj.totalCost === 0) {
+        const days = Math.ceil((new Date(b.dropoffDate) - new Date(b.pickupDate)) / (1000 * 60 * 60 * 24)) || 1;
+        const rate = b.vehicleId?.pricePerDay || 0;
+        bObj.totalCost = days * rate;
+      }
+      return bObj;
+    });
+
+    res.json(formattedBookings);
   } catch (error) {
     next(error);
   }

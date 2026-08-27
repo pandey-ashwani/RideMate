@@ -68,10 +68,80 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify(body)
       });
 
+      if (resData.requiresOtp) {
+        return { success: true, requiresOtp: true, user: resData };
+      }
+
       setUser(resData);
       localStorage.setItem('ridemate_user', JSON.stringify(resData));
       localStorage.setItem('ridemate_token', resData.token);
       return { success: true, user: resData };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  };
+
+  const sendOtp = async (email, purpose = 'verification') => {
+    try {
+      const resData = await apiRequest('/auth/send-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email, purpose })
+      });
+      return { success: true, message: resData.message, devOtp: resData.devOtp };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  };
+
+  const verifyOtp = async (email, otp) => {
+    try {
+      const resData = await apiRequest('/auth/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email, otp })
+      });
+
+      if (resData.token) {
+        setUser(resData);
+        localStorage.setItem('ridemate_user', JSON.stringify(resData));
+        localStorage.setItem('ridemate_token', resData.token);
+      }
+      return { success: true, user: resData, message: resData.message };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  };
+
+  const resendOtp = async (email) => {
+    try {
+      const resData = await apiRequest('/auth/resend-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+      });
+      return { success: true, message: resData.message, devOtp: resData.devOtp };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  };
+
+  const forgotPassword = async (email) => {
+    try {
+      const resData = await apiRequest('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+      });
+      return { success: true, message: resData.message, devOtp: resData.devOtp };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  };
+
+  const resetPassword = async (email, otp, newPassword) => {
+    try {
+      const resData = await apiRequest('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ email, otp, newPassword })
+      });
+      return { success: true, message: resData.message };
     } catch (error) {
       return { success: false, message: error.message };
     }
@@ -127,6 +197,11 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         register,
+        sendOtp,
+        verifyOtp,
+        resendOtp,
+        forgotPassword,
+        resetPassword,
         updateProfile,
         verifyOwner,
         toggleUserStatus

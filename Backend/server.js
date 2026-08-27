@@ -1,9 +1,13 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+
+
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import path from 'path';
 import fs from 'fs';
-import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 
 // Middlewares
@@ -21,7 +25,7 @@ import documentRoutes from './routes/documentRoutes.js';
 import { upload, protectedUpload, validateFileMagicBytes } from './middleware/uploadMiddleware.js';
 
 // Load Config
-dotenv.config();
+
 
 // Production Provider Credentials Validation
 if (process.env.NODE_ENV === 'production') {
@@ -101,6 +105,11 @@ if (distPath) {
   app.use(express.static(distPath));
 }
 
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', app: 'RideMate', service: 'RideMate Backend API' });
+});
+
 // Routes mount
 app.use('/api/auth', authRoutes);
 app.use('/api/vehicles', vehicleRoutes);
@@ -158,6 +167,6 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`RideMate Backend running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });

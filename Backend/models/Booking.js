@@ -27,7 +27,8 @@ const bookingSchema = new mongoose.Schema(
     drivingLicense: { type: String, default: '' },
     licenseDoc: { type: String, default: '' },
     pickupLocation: { type: String, default: '' },
-    pickupNotes: { type: String, default: '' }
+    pickupNotes: { type: String, default: '' },
+    totalCost: { type: Number, default: 0 }
   },
   {
     timestamps: true

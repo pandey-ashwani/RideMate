@@ -7,6 +7,7 @@ import { ScrollToHash } from './components/Common/ScrollToHash';
 import Home from './pages/Home';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
+import VerifyOtp from './pages/Auth/VerifyOtp';
 import VehicleSearch from './pages/Customer/VehicleSearch';
 import CustomerDashboard from './pages/Customer/CustomerDashboard';
 
@@ -32,12 +33,15 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user } = useAuth();
 
   if (!user) {
-    // Save attempted redirect route if needed
     return <Navigate to="/login" replace />;
   }
 
+  // OTP Verification Guard: Non-admin unverified users are blocked from dashboard routes
+  if (user.role !== 'admin' && !user.emailVerified && !user.phoneVerified) {
+    return <Navigate to={`/register?verify=true&email=${encodeURIComponent(user.email)}`} replace />;
+  }
+
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // If user's role isn't authorized, bounce back to public homepage
     return <Navigate to="/" replace />;
   }
 
@@ -55,6 +59,7 @@ function App() {
           <Route path="/vehicles" element={<VehicleSearch />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-otp" element={<VerifyOtp />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<TermsPage />} />
 
