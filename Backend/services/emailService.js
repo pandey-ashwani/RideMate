@@ -17,14 +17,23 @@ export const sendEmail = async ({ to, subject, text, html }) => {
       };
     }
 
+    const port = Number(process.env.EMAIL_PORT) || 465;
+
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST || "smtp.gmail.com",
-      port: Number(process.env.EMAIL_PORT) || 465,
-      secure: Number(process.env.EMAIL_PORT || 465) === 465,
+      port: port,
+      secure: port === 465,
+      family: 4, // Force IPv4 resolution to prevent ENETUNREACH on Render
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 15000,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD,
       },
+      tls: {
+        rejectUnauthorized: false
+      }
     });
 
     const info = await transporter.sendMail({
