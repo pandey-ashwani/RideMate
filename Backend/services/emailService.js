@@ -3,23 +3,28 @@ import nodemailer from "nodemailer";
 // Helper function to create Nodemailer transporter
 const createTransporter = () => {
   const port = Number(process.env.EMAIL_PORT) || 587;
+
   return nodemailer.createTransport({
     host: process.env.EMAIL_HOST || "smtp.gmail.com",
     port: port,
     secure: port === 465,
+    family: 4, // Force IPv4 to avoid IPv6 ENETUNREACH errors
+
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
     },
+
     tls: {
-      rejectUnauthorized: false
-    }
+      rejectUnauthorized: false,
+    },
   });
 };
 
 // Startup verification check
 if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
   const transporter = createTransporter();
+
   transporter.verify((error) => {
     if (error) {
       console.error("❌ Gmail SMTP connection failed:", error.message);
@@ -38,16 +43,20 @@ export const sendEmail = async ({ to, subject, text, html }) => {
     const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER;
 
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-      console.warn(`⚠️ EMAIL CREDENTIALS MISSING (EMAIL_USER / EMAIL_PASSWORD). Simulating email dispatch to ${to}`);
+      console.warn(
+        `⚠️ EMAIL CREDENTIALS MISSING (EMAIL_USER / EMAIL_PASSWORD). Simulating email dispatch to ${to}`
+      );
+
       console.log(`================ EMAIL LOG ================`);
       console.log(`To: ${to}`);
       console.log(`Subject: ${subject}`);
       console.log(`Body: ${text}`);
       console.log(`===========================================`);
+
       return {
         success: true,
         simulated: true,
-        message: 'Email simulated in development mode.'
+        message: "Email simulated in development mode.",
       };
     }
 
@@ -58,18 +67,25 @@ export const sendEmail = async ({ to, subject, text, html }) => {
       to,
       subject: subject || "RideMate - Email Verification OTP",
       text,
-      html: html || `<div style="font-family: Arial, sans-serif;"><p>${text}</p></div>`,
+      html:
+        html ||
+        `<div style="font-family: Arial, sans-serif;"><p>${text}</p></div>`,
     });
 
-    console.log(`✅ Email sent successfully via Gmail SMTP to: ${to} (Message ID: ${info.messageId})`);
+    console.log(
+      `✅ Email sent successfully via Gmail SMTP to: ${to} (Message ID: ${info.messageId})`
+    );
 
     return {
       success: true,
       info,
-      messageId: info.messageId
+      messageId: info.messageId,
     };
   } catch (error) {
-    console.error("❌ Gmail SMTP Email sending failed:", error.message);
+    console.error(
+      "❌ Gmail SMTP Email sending failed:",
+      error.message
+    );
 
     return {
       success: false,
