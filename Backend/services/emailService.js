@@ -1,23 +1,25 @@
 import nodemailer from "nodemailer";
 
-// Helper function to create Nodemailer transporter
+// Create Gmail SMTP transporter
 const createTransporter = () => {
-  const port = Number(process.env.EMAIL_PORT) || 587;
-
   return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || "smtp.gmail.com",
-    port: port,
-    secure: port === 465,
-    family: 4, // Force IPv4 to avoid IPv6 ENETUNREACH errors
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // STARTTLS
+    family: 4, // Force IPv4
 
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
     },
 
-    tls: {
-      rejectUnauthorized: false,
-    },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
+
+    // Temporary debugging
+    logger: true,
+    debug: true,
   });
 };
 
@@ -27,7 +29,8 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
 
   transporter.verify((error) => {
     if (error) {
-      console.error("❌ Gmail SMTP connection failed:", error.message);
+      console.error("❌ Gmail SMTP verification failed:");
+      console.error(error);
     } else {
       console.log("✅ Gmail SMTP connection ready");
     }
@@ -40,23 +43,18 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
  */
 export const sendEmail = async ({ to, subject, text, html }) => {
   try {
-    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+    const fromAddress =
+      process.env.EMAIL_FROM || process.env.EMAIL_USER;
 
+    // Check credentials
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
       console.warn(
-        `⚠️ EMAIL CREDENTIALS MISSING (EMAIL_USER / EMAIL_PASSWORD). Simulating email dispatch to ${to}`
+        "⚠️ EMAIL_USER or EMAIL_PASSWORD is missing."
       );
 
-      console.log(`================ EMAIL LOG ================`);
-      console.log(`To: ${to}`);
-      console.log(`Subject: ${subject}`);
-      console.log(`Body: ${text}`);
-      console.log(`===========================================`);
-
       return {
-        success: true,
-        simulated: true,
-        message: "Email simulated in development mode.",
+        success: false,
+        error: "Email credentials are missing",
       };
     }
 
@@ -69,12 +67,16 @@ export const sendEmail = async ({ to, subject, text, html }) => {
       text,
       html:
         html ||
-        `<div style="font-family: Arial, sans-serif;"><p>${text}</p></div>`,
+        `<div style="font-family: Arial, sans-serif;">
+          <p>${text}</p>
+        </div>`,
     });
 
     console.log(
-      `✅ Email sent successfully via Gmail SMTP to: ${to} (Message ID: ${info.messageId})`
+      `✅ Email sent successfully via Gmail SMTP to: ${to}`
     );
+
+    console.log(`📧 Message ID: ${info.messageId}`);
 
     return {
       success: true,
@@ -82,10 +84,8 @@ export const sendEmail = async ({ to, subject, text, html }) => {
       messageId: info.messageId,
     };
   } catch (error) {
-    console.error(
-      "❌ Gmail SMTP Email sending failed:",
-      error.message
-    );
+    console.error("❌ Gmail SMTP Email sending failed:");
+    console.error(error);
 
     return {
       success: false,
