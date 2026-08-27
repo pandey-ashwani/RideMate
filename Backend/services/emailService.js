@@ -1,4 +1,9 @@
 import nodemailer from "nodemailer";
+import dns from "dns";
+
+const customLookup = (hostname, options, callback) => {
+  return dns.lookup(hostname, { family: 4 }, callback);
+};
 
 export const sendEmail = async ({ to, subject, text, html }) => {
   try {
@@ -17,24 +22,40 @@ export const sendEmail = async ({ to, subject, text, html }) => {
       };
     }
 
+    const host = process.env.EMAIL_HOST || "smtp.gmail.com";
     const port = Number(process.env.EMAIL_PORT) || 465;
+    const isGmail = host.includes("gmail");
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || "smtp.gmail.com",
-      port: port,
-      secure: port === 465,
-      family: 4, // Force IPv4 resolution to prevent ENETUNREACH on Render
-      connectionTimeout: 15000,
-      greetingTimeout: 15000,
-      socketTimeout: 15000,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
+    const transportConfig = isGmail
+      ? {
+          service: "gmail",
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASSWORD,
+          },
+          lookup: customLookup,
+          connectionTimeout: 15000,
+          greetingTimeout: 15000,
+          socketTimeout: 15000
+        }
+      : {
+          host: host,
+          port: port,
+          secure: port === 465,
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASSWORD,
+          },
+          lookup: customLookup,
+          connectionTimeout: 15000,
+          greetingTimeout: 15000,
+          socketTimeout: 15000,
+          tls: {
+            rejectUnauthorized: false
+          }
+        };
+
+    const transporter = nodemailer.createTransport(transportConfig);
 
     const info = await transporter.sendMail({
       from:
