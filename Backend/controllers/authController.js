@@ -408,8 +408,35 @@ RideMate Team`;
     });
 
   } catch (error) {
-    next(error);
+  // MongoDB duplicate key error
+  if (error.code === 11000) {
+    const duplicateField = Object.keys(error.keyPattern || {})[0];
+
+    if (duplicateField === 'email') {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Email already exists. Please use a different email or log in.'
+      });
+    }
+
+    if (duplicateField === 'phone') {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Mobile number already exists. Please use a different number.'
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message:
+        'An account with these details already exists.'
+    });
   }
+
+  next(error);
+}
 };
 
 // @desc    Send Email OTP Verification Code

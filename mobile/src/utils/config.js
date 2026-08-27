@@ -1,39 +1,31 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
-const PRIMARY_WIFI_IP = '100.67.228.171';
-const HOTSPOT_IP = '192.168.137.1';
+// Production RideMate backend hosted on Render
+const PRODUCTION_API_URL = 'https://ridemate-cp4a.onrender.com/api';
 
 export const getApiBaseUrl = () => {
   if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
+    return process.env.EXPO_PUBLIC_API_URL.replace(/\/+$/, '');
   }
-
-  // Automatically extract Expo Go / Metro host IP (Works on Physical Android & iOS phones)
-  const hostUri = Constants.expoConfig?.hostUri || Constants.manifest2?.extra?.expoGo?.debuggerHost || Constants.manifest?.debuggerHost;
-
-  if (hostUri) {
-    const ip = hostUri.split(':')[0];
-    if (ip && ip !== 'localhost' && ip !== '127.0.0.1') {
-      return `http://${ip}:5000/api`;
-    }
-  }
-
-  // Standalone APK on physical Android device
-  if (Platform.OS === 'android') {
-    return `http://${PRIMARY_WIFI_IP}:5000/api`;
-  }
-
-  // Fallback for iOS Simulator / Web / Local
-  return 'http://localhost:5000/api';
+  return PRODUCTION_API_URL;
 };
 
 export const API_BASE_URL = getApiBaseUrl();
 
 export const resolveImageUrl = (path) => {
-  if (!path) return 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500';
-  if (path.startsWith('http')) return path;
+  // Default fallback image
+  if (!path) {
+    return 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500';
+  }
 
-  const baseHost = getApiBaseUrl().replace('/api', '');
+  // If path is already a full http/https URL
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+
+  // Convert relative upload paths like /uploads/image.jpg
+  // into https://ridemate-cp4a.onrender.com/uploads/image.jpg
+  const baseHost = API_BASE_URL.replace(/\/api\/?$/, '');
   return `${baseHost}${path.startsWith('/') ? '' : '/'}${path}`;
 };

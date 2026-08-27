@@ -68,10 +68,10 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Security & Production CORS Configurations
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL 
-    ? process.env.FRONTEND_URL 
-    : true,
-  credentials: true
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Client-Platform', 'X-Requested-With', 'Accept']
 };
 app.use(cors(corsOptions));
 

@@ -33,15 +33,25 @@ const seedAdmin = async () => {
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    const mongoUri = process.env.MONGO_URI || 'mongodb+srv://ashwani:ashwani123@cluster0.smjw1.mongodb.net/ridemate?retryWrites=true&w=majority';
+    
+    // Explicitly target 'ridemate' database to prevent defaulting to 'test' database
+    const conn = await mongoose.connect(mongoUri, {
+      dbName: 'ridemate'
+    });
+    console.log(`MongoDB Connected: ${conn.connection.host}/${conn.connection.name}`);
 
-    // Drop stale indexes if they exist (e.g. username_1 on users collection)
+    // Drop any stale/legacy indexes on users collection (e.g. username_1)
     try {
-      await User.collection.dropIndex('username_1');
-      console.log('Successfully dropped stale username_1 index');
+      const indexes = await User.collection.indexes();
+      for (const idx of indexes) {
+        if (idx.name.includes('username') && idx.name !== '_id_') {
+          await User.collection.dropIndex(idx.name);
+          console.log(`Dropped stale index: ${idx.name}`);
+        }
+      }
     } catch (idxErr) {
-      // Index username_1 did not exist or was already dropped
+      // Ignore if collection doesn't exist yet
     }
 
     try {
