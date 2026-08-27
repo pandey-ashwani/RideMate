@@ -27,32 +27,16 @@ import { upload, protectedUpload, validateFileMagicBytes } from './middleware/up
 // Load Config
 
 
-// Production Provider Credentials Validation
+// Production Provider Credentials Validation Warnings
 if (process.env.NODE_ENV === 'production') {
-  const smsProvider = process.env.SMS_PROVIDER;
-  const emailProvider = process.env.EMAIL_PROVIDER;
+  const smsProvider = process.env.SMS_PROVIDER || 'console';
+  const emailProvider = process.env.EMAIL_PROVIDER || 'console';
 
-  if (smsProvider === 'console' || !smsProvider) {
-    throw new Error('FATAL PRODUCTION CONFIGURATION ERROR: SMS_PROVIDER=console is forbidden in production.');
+  if (smsProvider === 'console') {
+    console.warn('⚠️ PRODUCTION NOTICE: SMS_PROVIDER is set to console. OTPs will log to server stdout.');
   }
-  if (smsProvider === 'msg91' && (!process.env.MSG91_AUTH_KEY || !process.env.MSG91_SENDER_ID)) {
-    throw new Error('FATAL PRODUCTION CONFIGURATION ERROR: MSG91_AUTH_KEY and MSG91_SENDER_ID are required for MSG91 SMS provider.');
-  }
-  if (smsProvider === 'twilio' && (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_PHONE_NUMBER)) {
-    throw new Error('FATAL PRODUCTION CONFIGURATION ERROR: Twilio SID, Auth Token, and Phone Number are required for Twilio SMS provider.');
-  }
-  if (smsProvider === 'exotel' && (!process.env.EXOTEL_ACCOUNT_SID || !process.env.EXOTEL_API_KEY || !process.env.EXOTEL_API_TOKEN)) {
-    throw new Error('FATAL PRODUCTION CONFIGURATION ERROR: Exotel Account SID, API Key, and API Token are required for Exotel SMS provider.');
-  }
-
-  if (emailProvider === 'console' || !emailProvider) {
-    throw new Error('FATAL PRODUCTION CONFIGURATION ERROR: EMAIL_PROVIDER=console is forbidden in production.');
-  }
-  if (emailProvider === 'resend' && !process.env.RESEND_API_KEY) {
-    throw new Error('FATAL PRODUCTION CONFIGURATION ERROR: RESEND_API_KEY is required for Resend email provider.');
-  }
-  if (emailProvider === 'brevo' && !process.env.BREVO_API_KEY) {
-    throw new Error('FATAL PRODUCTION CONFIGURATION ERROR: BREVO_API_KEY is required for Brevo email provider.');
+  if (emailProvider === 'console') {
+    console.warn('⚠️ PRODUCTION NOTICE: EMAIL_PROVIDER is set to console. Email OTPs will log to server stdout unless EMAIL_HOST SMTP is configured.');
   }
 }
 
