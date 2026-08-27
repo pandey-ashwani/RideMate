@@ -21,7 +21,6 @@ export const LoginScreen = ({ navigation }) => {
   const [newPassword, setNewPassword] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSuccess, setForgotSuccess] = useState('');
-  const [devOtpCode, setDevOtpCode] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
 
   React.useEffect(() => {
@@ -77,7 +76,6 @@ export const LoginScreen = ({ navigation }) => {
     setForgotLoading(false);
 
     if (res.success) {
-      if (res.devOtp) setDevOtpCode(String(res.devOtp));
       setForgotStep('reset');
       setForgotSuccess(res.message || 'Reset code sent to your email.');
     } else {
@@ -124,7 +122,6 @@ export const LoginScreen = ({ navigation }) => {
     setForgotLoading(false);
 
     if (res.success) {
-      if (res.devOtp) setDevOtpCode(String(res.devOtp));
       setForgotSuccess(res.message || 'A new reset code has been sent to your email.');
       setResendCooldown(60);
     } else {
@@ -186,18 +183,6 @@ export const LoginScreen = ({ navigation }) => {
                   <View style={styles.successBox}>
                     <Text style={styles.successText}>✅ {forgotSuccess}</Text>
                   </View>
-                ) : null}
-
-                {devOtpCode && forgotStep === 'reset' ? (
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => setForgotOtp(devOtpCode)}
-                    style={styles.devOtpBox}
-                  >
-                    <Text style={styles.devOtpBadge}>💡 DEMO RESET CODE</Text>
-                    <Text style={styles.devOtpCode}>{devOtpCode}</Text>
-                    <Text style={styles.devOtpHint}>Tap to auto-fill code</Text>
-                  </TouchableOpacity>
                 ) : null}
 
                 {forgotStep === 'email' ? (

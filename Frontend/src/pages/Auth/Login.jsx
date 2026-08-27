@@ -26,7 +26,6 @@ export const Login = () => {
   const [forgotOtp, setForgotOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
-  const [devOtpCode, setDevOtpCode] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
 
   React.useEffect(() => {
@@ -79,7 +78,6 @@ export const Login = () => {
     setForgotLoading(false);
 
     if (res.success) {
-      if (res.devOtp) setDevOtpCode(String(res.devOtp));
       setForgotStep('reset');
       setSuccessMsg(res.message || 'Reset code sent to your email.');
     } else {
@@ -127,7 +125,6 @@ export const Login = () => {
     setForgotLoading(false);
 
     if (res.success) {
-      if (res.devOtp) setDevOtpCode(String(res.devOtp));
       setSuccessMsg(res.message || 'A new reset code has been sent to your email.');
       setResendCooldown(60);
     } else {
@@ -164,12 +161,6 @@ export const Login = () => {
                 <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 p-3.5 rounded-lg text-xs font-semibold">
                   <CheckCircle2 className="w-4.5 h-4.5 shrink-0" />
                   <span>{successMsg}</span>
-                </div>
-              )}
-
-              {devOtpCode && forgotStep === 'reset' && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-xs font-bold text-center">
-                  🔑 Development Reset Code: <span className="tracking-widest text-base font-black">{devOtpCode}</span>
                 </div>
               )}
 
