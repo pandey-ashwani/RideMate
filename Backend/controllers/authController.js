@@ -969,16 +969,17 @@ export const forgotPassword = async (req, res, next) => {
       </div>
     `;
 
-    setImmediate(async () => {
-      await sendEmail({ to: normalizedEmail, subject, text, html });
-    });
+    const emailResult = await sendEmail({ to: normalizedEmail, subject, text, html });
 
-    const isDev = process.env.NODE_ENV !== 'production';
+    if (!emailResult.success) {
+      console.error('❌ Failed to dispatch password reset email:', emailResult.error);
+      res.status(500);
+      throw new Error('Unable to send the password reset email right now. Please try again later.');
+    }
 
     res.json({
       success: true,
-      message: 'Password reset code sent to your email address.',
-      devOtp: isDev ? rawOtp : undefined
+      message: 'If an account exists with this email, a password reset code has been sent.'
     });
   } catch (error) {
     next(error);
