@@ -1,65 +1,47 @@
 import nodemailer from "nodemailer";
+import dns from "node:dns/promises";
 
 // Create Gmail SMTP transporter
-const createTransporter = () => {
+const createTransporter = async () => {
+  // Explicitly resolve an IPv4 address
+  const addresses = await dns.resolve4("smtp.gmail.com");
+
+  console.log(`📡 Gmail SMTP IPv4: ${addresses[0]}`);
+
   return nodemailer.createTransport({
-    host: "smtp.gmail.com",
+    host: addresses[0], // Use IPv4 directly
     port: 587,
     secure: false,
+
+    requireTLS: true,
 
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
     },
 
+    // Important: connect to Gmail IP but use smtp.gmail.com for TLS
+    tls: {
+      servername: "smtp.gmail.com",
+    },
+
     connectionTimeout: 15000,
     greetingTimeout: 15000,
     socketTimeout: 30000,
-
-    logger: true,
-    debug: true,
   });
 };
 
-// Startup verification check
-if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
-  const transporter = createTransporter();
-
-  transporter.verify((error) => {
-    if (error) {
-      console.error("❌ Gmail SMTP verification failed:");
-      console.error(error);
-    } else {
-      console.log("✅ Gmail SMTP connection ready");
-    }
-  });
-}
-
-/**
- * Sends an email using Nodemailer with Gmail SMTP
- * @param {Object} options - { to, subject, text, html }
- */
+// Send email
 export const sendEmail = async ({ to, subject, text, html }) => {
   try {
-    const fromAddress =
-      process.env.EMAIL_FROM || process.env.EMAIL_USER;
-
-    // Check credentials
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-      console.warn(
-        "⚠️ EMAIL_USER or EMAIL_PASSWORD is missing."
-      );
-
-      return {
-        success: false,
-        error: "Email credentials are missing",
-      };
+      throw new Error("EMAIL_USER or EMAIL_PASSWORD is missing");
     }
 
-    const transporter = createTransporter();
+    const transporter = await createTransporter();
 
     const info = await transporter.sendMail({
-      from: fromAddress,
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to,
       subject: subject || "RideMate - Email Verification OTP",
       text,
@@ -70,11 +52,7 @@ export const sendEmail = async ({ to, subject, text, html }) => {
         </div>`,
     });
 
-    console.log(
-      `✅ Email sent successfully via Gmail SMTP to: ${to}`
-    );
-
-    console.log(`📧 Message ID: ${info.messageId}`);
+    console.log(`✅ Email sent successfully to: ${to}`);
 
     return {
       success: true,
@@ -82,8 +60,7 @@ export const sendEmail = async ({ to, subject, text, html }) => {
       messageId: info.messageId,
     };
   } catch (error) {
-    console.error("❌ Gmail SMTP Email sending failed:");
-    console.error(error);
+    console.error("❌ Gmail SMTP Email sending failed:", error.message);
 
     return {
       success: false,
