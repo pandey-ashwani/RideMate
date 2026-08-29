@@ -30,12 +30,14 @@ export const Navbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             {/* Logo */}
-            <Link to="/" className="flex-shrink-0 flex items-center gap-2 group">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-accent font-black text-xl shadow-md group-hover:rotate-6 transition-transform duration-200">
-                RM
-              </div>
+            <Link to="/" className="flex-shrink-0 flex items-center gap-2.5 group">
+              <img
+                src="/logo.png"
+                alt="RideMate Logo"
+                className="w-10 h-10 rounded-xl object-contain shadow-md group-hover:scale-105 transition-transform duration-200"
+              />
               <span className="text-xl font-extrabold text-slate-800 tracking-tight">
-                Ride<span className="text-primary-light">Mate</span>
+                Ride<span className="text-amber-500">Mate</span>
               </span>
             </Link>
             

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import TouchButton from '../../components/Common/TouchButton';
@@ -138,9 +138,11 @@ export const LoginScreen = ({ navigation }) => {
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           
           <View style={styles.brandHeader}>
-            <View style={styles.logoBadge}>
-              <Text style={styles.logoText}>RM</Text>
-            </View>
+            <Image
+              source={require('../../../assets/icon.png')}
+              style={{ width: 72, height: 72, borderRadius: 16, marginBottom: 8 }}
+              resizeMode="contain"
+            />
             <Text style={styles.brandTitle}>RideMate</Text>
             <Text style={styles.brandSub}>Vehicle Rentals Simplified</Text>
           </View>
