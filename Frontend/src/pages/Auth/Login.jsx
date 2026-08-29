@@ -26,6 +26,7 @@ export const Login = () => {
   const [forgotOtp, setForgotOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [devOtpCode, setDevOtpCode] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
 
   React.useEffect(() => {
@@ -78,6 +79,7 @@ export const Login = () => {
     setForgotLoading(false);
 
     if (res.success) {
+      if (res.devOtp || res.otp) setDevOtpCode(String(res.devOtp || res.otp));
       setForgotStep('reset');
       setSuccessMsg(res.message || 'Reset code sent to your email.');
     } else {
@@ -125,6 +127,7 @@ export const Login = () => {
     setForgotLoading(false);
 
     if (res.success) {
+      if (res.devOtp || res.otp) setDevOtpCode(String(res.devOtp || res.otp));
       setSuccessMsg(res.message || 'A new reset code has been sent to your email.');
       setResendCooldown(60);
     } else {
@@ -161,6 +164,15 @@ export const Login = () => {
                 <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 p-3.5 rounded-lg text-xs font-semibold">
                   <CheckCircle2 className="w-4.5 h-4.5 shrink-0" />
                   <span>{successMsg}</span>
+                </div>
+              )}
+
+              {devOtpCode && forgotStep === 'reset' && (
+                <div
+                  onClick={() => setForgotOtp(devOtpCode)}
+                  className="bg-amber-100 border border-amber-300 text-amber-900 px-4 py-3 rounded-xl text-center font-black text-lg cursor-pointer hover:bg-amber-200 transition-colors"
+                >
+                  OTP : {devOtpCode}
                 </div>
               )}
 

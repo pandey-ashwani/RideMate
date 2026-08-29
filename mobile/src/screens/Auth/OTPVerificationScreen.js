@@ -19,8 +19,10 @@ export const OTPVerificationScreen = ({ route, navigation }) => {
   const email = route.params?.email || '';
   const phone = route.params?.phone || '';
   const identifier = email || phone;
+  const initialDevOtp = route.params?.devOtp || route.params?.otp || '';
 
   const [otp, setOtp] = useState('');
+  const [devOtpCode, setDevOtpCode] = useState(initialDevOtp);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
 
@@ -150,6 +152,9 @@ const handleVerify = async () => {
         setOtp('');
         setOtpTimer(600);
         setResendCooldown(60);
+        if (response?.devOtp || response?.otp) {
+          setDevOtpCode(String(response.devOtp || response.otp));
+        }
 
         setSuccessMsg(
           'A new verification code has been sent to your email.'
@@ -215,6 +220,18 @@ const handleVerify = async () => {
               <View style={styles.successBox}>
                 <Text style={styles.successText}>{successMsg}</Text>
               </View>
+            ) : null}
+
+            {devOtpCode ? (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setOtp(String(devOtpCode))}
+                style={{ backgroundColor: '#FEF3C7', padding: 12, borderRadius: 8, marginVertical: 8, alignItems: 'center', width: '100%' }}
+              >
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#92400E' }}>
+                  OTP : {devOtpCode}
+                </Text>
+              </TouchableOpacity>
             ) : null}
 
             {/* OTP Input */}

@@ -21,6 +21,7 @@ export const LoginScreen = ({ navigation }) => {
   const [newPassword, setNewPassword] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSuccess, setForgotSuccess] = useState('');
+  const [devOtpCode, setDevOtpCode] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
 
   React.useEffect(() => {
@@ -77,6 +78,7 @@ export const LoginScreen = ({ navigation }) => {
 
     if (res.success) {
       setForgotStep('reset');
+      if (res.devOtp || res.otp) setDevOtpCode(String(res.devOtp || res.otp));
       setForgotSuccess(res.message || 'Reset code sent to your email.');
     } else {
       setError(res.message || 'Failed to send password reset code.');
@@ -122,6 +124,7 @@ export const LoginScreen = ({ navigation }) => {
     setForgotLoading(false);
 
     if (res.success) {
+      if (res.devOtp || res.otp) setDevOtpCode(String(res.devOtp || res.otp));
       setForgotSuccess(res.message || 'A new reset code has been sent to your email.');
       setResendCooldown(60);
     } else {
@@ -183,6 +186,18 @@ export const LoginScreen = ({ navigation }) => {
                   <View style={styles.successBox}>
                     <Text style={styles.successText}>✅ {forgotSuccess}</Text>
                   </View>
+                ) : null}
+
+                {devOtpCode && forgotStep === 'reset' ? (
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => setForgotOtp(devOtpCode)}
+                    style={{ backgroundColor: '#FEF3C7', padding: 12, borderRadius: 8, marginVertical: 8, alignItems: 'center' }}
+                  >
+                    <Text style={{ fontSize: 16, fontWeight: '800', color: '#92400E' }}>
+                      OTP : {devOtpCode}
+                    </Text>
+                  </TouchableOpacity>
                 ) : null}
 
                 {forgotStep === 'email' ? (

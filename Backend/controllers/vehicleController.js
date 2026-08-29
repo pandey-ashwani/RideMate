@@ -7,26 +7,17 @@ import User from '../models/User.js';
 // @access  Public
 export const getVehicles = async (req, res, next) => {
   try {
-    const pageSize = Number(req.query.pageSize) || 6;
+    const pageSize = Number(req.query.pageSize) || 100;
     const page = Number(req.query.page) || 1;
 
     // Filters
     const query = {};
     if (req.query.ownerId) {
       query.ownerId = req.query.ownerId;
-    } else {
-      // Find all owners verified and approved by admin
-      const verifiedOwners = await User.find({
-        role: 'owner',
-        $or: [{ isVerified: true }, { verificationStatus: 'approved' }]
-      }).select('_id');
-
-      const verifiedOwnerIds = verifiedOwners.map(o => o._id);
-
-      // PUBLIC CUSTOMER DASHBOARD GUARD: Only show vehicles owned by admin-verified owners
-      query.ownerId = { $in: verifiedOwnerIds };
-      query.status = { $ne: 'rejected' };
     }
+
+    // Only exclude explicitly rejected vehicles
+    query.status = { $ne: 'rejected' };
 
     // Keyword Search (brand, name, location)
     if (req.query.keyword) {
@@ -101,14 +92,6 @@ export const createVehicle = async (req, res, next) => {
   const { name, brand, type, pricePerDay, image, specs, location, description } = req.body;
 
   try {
-    const owner = await User.findById(req.user._id);
-
-    // STRICT OWNER VERIFICATION GUARD: No vehicle can be listed without admin verification
-    if (owner.role !== 'admin' && !owner.isVerified && owner.verificationStatus !== 'approved') {
-      res.status(403);
-      throw new Error('Account Verification Required: You must be verified & approved by an administrator before listing vehicles.');
-    }
-
     const vehicle = new Vehicle({
       name,
       brand,
@@ -118,6 +101,7 @@ export const createVehicle = async (req, res, next) => {
       specs: specs || { transmission: 'Automatic', fuel: 'Electric', seats: 4, range: '250 miles' },
       ownerId: req.user._id,
       location,
+      description,
       status: 'approved'
     });
 

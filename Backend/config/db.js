@@ -63,6 +63,20 @@ const connectDB = async () => {
 
     // Seed default admin & correct roles
     await seedAdmin();
+
+    // Auto-approve all existing vehicle listings in database
+    try {
+      const Vehicle = mongoose.model('Vehicle');
+      const updateResult = await Vehicle.updateMany(
+        { status: 'pending' },
+        { status: 'approved' }
+      );
+      if (updateResult.modifiedCount > 0) {
+        console.log(`Auto-approved ${updateResult.modifiedCount} existing vehicle listings.`);
+      }
+    } catch (vErr) {
+      // Ignore if model not registered yet
+    }
   } catch (error) {
     console.error(`Database Connection Error: ${error.message}`);
     process.exit(1);

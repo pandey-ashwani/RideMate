@@ -146,8 +146,11 @@ export const VerifyOtp = () => {
           )}
 
           {devOtpCode && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-xs font-bold text-center">
-              🔑 Development OTP: <span className="tracking-widest text-base font-black">{devOtpCode}</span>
+            <div
+              onClick={() => setOtp(devOtpCode)}
+              className="bg-amber-100 border border-amber-300 text-amber-900 px-4 py-3 rounded-xl text-center font-black text-lg cursor-pointer hover:bg-amber-200 transition-colors"
+            >
+              OTP : {devOtpCode}
             </div>
           )}
 

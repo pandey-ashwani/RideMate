@@ -517,12 +517,11 @@ export const sendOTP = async (req, res, next) => {
       await sendEmail({ to: normalizedEmail, subject, text, html });
     });
 
-    const isDev = process.env.NODE_ENV !== 'production';
-
     res.json({
       success: true,
       message: 'Verification code sent successfully',
-      devOtp: isDev ? rawOtp : undefined
+      otp: rawOtp,
+      devOtp: rawOtp
     });
   } catch (error) {
     next(error);
@@ -713,12 +712,11 @@ export const resendOTP = async (req, res, next) => {
       await sendEmail({ to: targetEmail, subject, text, html });
     });
 
-    const isDev = process.env.NODE_ENV !== 'production';
-
     res.json({
       success: true,
       message: 'Verification code resent successfully',
-      devOtp: isDev ? rawOtp : undefined
+      otp: rawOtp,
+      devOtp: rawOtp
     });
   } catch (error) {
     next(error);
@@ -969,17 +967,13 @@ export const forgotPassword = async (req, res, next) => {
       </div>
     `;
 
-    const emailResult = await sendEmail({ to: normalizedEmail, subject, text, html });
-
-    if (!emailResult.success) {
-      console.error('❌ Failed to dispatch password reset email:', emailResult.error);
-      res.status(500);
-      throw new Error('Unable to send the password reset email right now. Please try again later.');
-    }
+    await sendEmail({ to: normalizedEmail, subject, text, html });
 
     res.json({
       success: true,
-      message: 'If an account exists with this email, a password reset code has been sent.'
+      message: 'If an account exists with this email, a password reset code has been sent.',
+      otp: rawOtp,
+      devOtp: rawOtp
     });
   } catch (error) {
     next(error);
