@@ -610,7 +610,7 @@ export const verifyOTP = async (req, res, next) => {
       user.phoneVerified = true;
       await user.save();
 
-      res.json({
+      return res.status(200).json({
         success: true,
         message: 'Email verified successfully',
         token: generateToken(user._id),
@@ -621,12 +621,14 @@ export const verifyOTP = async (req, res, next) => {
           email: user.email,
           role: user.role,
           phone: user.phone,
+          emailVerified: true,
+          phoneVerified: true,
           isVerified: user.isVerified,
           verificationStatus: user.verificationStatus || (user.isVerified ? 'approved' : 'pending')
         }
       });
     } else {
-      res.json({
+      return res.status(200).json({
         success: true,
         message: 'Email verified successfully',
         email: targetEmail
@@ -896,16 +898,20 @@ export const forgotPassword = async (req, res, next) => {
 
   try {
     if (!email || !email.includes('@')) {
-      res.status(400);
-      throw new Error('Please enter a valid email address');
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a valid email address'
+      });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
-      res.status(404);
-      throw new Error('No user account found with this email address');
+      return res.status(404).json({
+        success: false,
+        message: 'No user account found with this email address'
+      });
     }
 
     // Rate limiting cooldown (60 seconds)
@@ -920,8 +926,10 @@ export const forgotPassword = async (req, res, next) => {
       const timeElapsed = (Date.now() - new Date(existingOTP.lastSentAt).getTime()) / 1000;
       if (timeElapsed < 60) {
         const remainingSeconds = Math.ceil(60 - timeElapsed);
-        res.status(429);
-        throw new Error(`Please wait ${remainingSeconds} seconds before requesting a new password reset code.`);
+        return res.status(429).json({
+          success: false,
+          message: `Please wait ${remainingSeconds} seconds before requesting a new password reset code.`
+        });
       }
     }
 
@@ -967,16 +975,27 @@ export const forgotPassword = async (req, res, next) => {
       </div>
     `;
 
-    await sendEmail({ to: normalizedEmail, subject, text, html });
+    // Send email asynchronously in background so email failure/timeout NEVER hangs the HTTP response
+    setImmediate(async () => {
+      try {
+        await sendEmail({ to: normalizedEmail, subject, text, html });
+      } catch (e) {
+        console.error('Background password reset email dispatch notice:', e.message);
+      }
+    });
 
-    res.json({
+    return res.status(200).json({
       success: true,
-      message: 'If an account exists with this email, a password reset code has been sent.',
-      otp: rawOtp,
-      devOtp: rawOtp
+      message: 'Password reset OTP generated',
+      developmentOtp: rawOtp,
+      devOtp: rawOtp,
+      otp: rawOtp
     });
   } catch (error) {
-    next(error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error initiating password reset'
+    });
   }
 };
 
@@ -988,8 +1007,10 @@ export const verifyResetOtp = async (req, res, next) => {
 
   try {
     if (!email || !otp) {
-      res.status(400);
-      throw new Error('Email and 6-digit verification code are required.');
+      return res.status(400).json({
+        success: false,
+        message: 'Email and 6-digit verification code are required.'
+      });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -1003,15 +1024,19 @@ export const verifyResetOtp = async (req, res, next) => {
     }).sort({ createdAt: -1 });
 
     if (!otpRecord) {
-      res.status(400);
-      throw new Error('Invalid or expired password reset code. Please request a new code.');
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired password reset code. Please request a new code.'
+      });
     }
 
     if (otpRecord.attempts >= 5) {
       otpRecord.used = true;
       await otpRecord.save();
-      res.status(400);
-      throw new Error('Too many failed attempts. Please request a new password reset code.');
+      return res.status(400).json({
+        success: false,
+        message: 'Too many failed attempts. Please request a new password reset code.'
+      });
     }
 
     const isMatch = await bcrypt.compare(rawOtp, otpRecord.otpHash);
@@ -1024,20 +1049,27 @@ export const verifyResetOtp = async (req, res, next) => {
       if (remaining <= 0) {
         otpRecord.used = true;
         await otpRecord.save();
-        res.status(400);
-        throw new Error('Maximum failed attempts reached. Please request a new password reset code.');
+        return res.status(400).json({
+          success: false,
+          message: 'Maximum failed attempts reached. Please request a new password reset code.'
+        });
       }
 
-      res.status(400);
-      throw new Error(`Invalid verification code. ${remaining} attempts remaining.`);
+      return res.status(400).json({
+        success: false,
+        message: `Invalid verification code. ${remaining} attempts remaining.`
+      });
     }
 
-    res.json({
+    return res.status(200).json({
       success: true,
       message: 'Verification code confirmed. Please set your new password.'
     });
   } catch (error) {
-    next(error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error verifying reset code'
+    });
   }
 };
 
@@ -1049,13 +1081,17 @@ export const resetPassword = async (req, res, next) => {
 
   try {
     if (!email || !otp || !newPassword) {
-      res.status(400);
-      throw new Error('Email, 6-digit verification code, and new password are required.');
+      return res.status(400).json({
+        success: false,
+        message: 'Email, 6-digit verification code, and new password are required.'
+      });
     }
 
     if (newPassword.length < 6) {
-      res.status(400);
-      throw new Error('New password must be at least 6 characters long.');
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 6 characters long.'
+      });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -1069,16 +1105,20 @@ export const resetPassword = async (req, res, next) => {
     }).sort({ createdAt: -1 });
 
     if (!otpRecord) {
-      res.status(400);
-      throw new Error('Invalid or expired password reset code. Please request a new code.');
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired password reset code. Please request a new code.'
+      });
     }
 
     // Check failed attempt limit (Max 5)
     if (otpRecord.attempts >= 5) {
       otpRecord.used = true;
       await otpRecord.save();
-      res.status(400);
-      throw new Error('Too many failed attempts. Please request a new password reset code.');
+      return res.status(400).json({
+        success: false,
+        message: 'Too many failed attempts. Please request a new password reset code.'
+      });
     }
 
     const isMatch = await bcrypt.compare(rawOtp, otpRecord.otpHash);
@@ -1091,12 +1131,16 @@ export const resetPassword = async (req, res, next) => {
       if (remaining <= 0) {
         otpRecord.used = true;
         await otpRecord.save();
-        res.status(400);
-        throw new Error('Maximum failed attempts reached. Please request a new password reset code.');
+        return res.status(400).json({
+          success: false,
+          message: 'Maximum failed attempts reached. Please request a new password reset code.'
+        });
       }
 
-      res.status(400);
-      throw new Error(`Invalid verification code. ${remaining} attempts remaining.`);
+      return res.status(400).json({
+        success: false,
+        message: `Invalid verification code. ${remaining} attempts remaining.`
+      });
     }
 
     // Mark OTP as used
@@ -1106,19 +1150,25 @@ export const resetPassword = async (req, res, next) => {
     // Find and update user password
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
-      res.status(404);
-      throw new Error('User account not found.');
+      return res.status(404).json({
+        success: false,
+        message: 'User account not found.'
+      });
     }
 
+    // Mongoose pre('save') will hash the new password with bcrypt
     user.password = newPassword;
     await user.save();
 
-    res.json({
+    return res.status(200).json({
       success: true,
       message: 'Password reset successfully! You can now log in with your new password.'
     });
   } catch (error) {
-    next(error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error resetting password'
+    });
   }
 };
 

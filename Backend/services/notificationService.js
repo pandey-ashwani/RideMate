@@ -13,7 +13,7 @@ export const notifyUser = async ({
   message,
   bookingId,
   sendSms = false,
-  sendEmail = false,
+  sendEmail: shouldSendEmail = false,
   toPhone,
   toEmail,
   smsText,
@@ -31,7 +31,7 @@ export const notifyUser = async ({
       bookingId,
       read: false,
       smsStatus: sendSms && toPhone ? 'pending' : 'not_sent',
-      emailStatus: sendEmail && toEmail ? 'pending' : 'not_sent'
+      emailStatus: shouldSendEmail && toEmail ? 'pending' : 'not_sent'
     });
 
     // 2. Post-Transaction / Post-Write Asynchronous Dispatch
@@ -47,7 +47,7 @@ export const notifyUser = async ({
           updated = true;
         }
 
-        if (sendEmail && toEmail && emailSubject && emailText) {
+        if (shouldSendEmail && toEmail && emailSubject && emailText) {
           const emailResult = await sendEmail({
             to: toEmail,
             subject: emailSubject,

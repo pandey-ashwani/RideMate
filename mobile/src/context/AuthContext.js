@@ -85,15 +85,39 @@ export const AuthProvider = ({ children }) => {
   const verifyOtp = async (email, otp) => {
     try {
       const res = await verifyOtpApi(email, otp);
-      const userObj = res.user ? { ...res.user, token: res.token || (res.user && res.user.token) } : res;
-      
-      if (res.token || userObj.token) {
-        setUser(userObj);
-        await AsyncStorage.setItem('ridemate_user', JSON.stringify(userObj));
-        await AsyncStorage.setItem('ridemate_token', res.token || userObj.token);
+      console.log('VERIFY OTP RESPONSE:', res);
+
+      const userObj = res.user
+        ? {
+            ...res.user,
+            emailVerified: true,
+            phoneVerified: true,
+            token: res.token || (res.user && res.user.token)
+          }
+        : {
+            ...res,
+            emailVerified: true,
+            phoneVerified: true
+          };
+
+      const tokenToSave = res.token || userObj.token;
+
+      if (tokenToSave) {
+        await AsyncStorage.setItem('ridemate_token', tokenToSave);
+        console.log('AUTH TOKEN SAVED:', tokenToSave);
       }
+
+      await AsyncStorage.setItem('ridemate_user', JSON.stringify(userObj));
+      console.log('AUTH USER SAVED:', userObj);
+
+      setUser(userObj);
+      console.log('AUTH STATE UPDATED:', userObj);
+      console.log('USER ROLE:', userObj?.role);
+      console.log('NAVIGATING/ROUTING TO:', userObj?.role === 'owner' ? 'OwnerTabs' : 'MainTabs');
+
       return { success: true, user: userObj };
     } catch (err) {
+      console.error('OTP verification error:', err);
       return { success: false, message: err.message || 'OTP verification failed' };
     }
   };

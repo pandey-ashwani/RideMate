@@ -30,8 +30,12 @@ export const AppNavigator = () => {
   const isOwner = user && user.role === 'owner';
   const isUnverified = user && user.role !== 'admin' && !user.emailVerified && !user.phoneVerified;
 
+  const authKey = user
+    ? `${user._id || user.id || 'user'}-${user.role || 'guest'}-${user.emailVerified ? 'verified' : 'unverified'}`
+    : 'guest';
+
   return (
-    <NavigationContainer key={user ? user._id : 'guest'}>
+    <NavigationContainer key={authKey}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isUnverified ? (
           // Unverified user forced into OTP Verification
