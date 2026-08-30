@@ -1,21 +1,22 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import colors from '../../theme/colors';
 
 export const StatusBadge = ({ status }) => {
   const getBadgeStyle = () => {
     switch (status) {
       case 'pending':
-        return { bg: '#FEF3C7', text: '#D97706', label: 'Pending Response' };
+        return { bg: colors.infoBg, text: colors.infoText, label: 'Pending Response' };
       case 'owner_accepted':
-        return { bg: '#E0F2FE', text: '#0284C7', label: 'Accepted by Owner' };
+        return { bg: colors.primaryLight, text: colors.tabActive, label: 'Accepted by Owner' };
       case 'confirmed':
-        return { bg: '#D1FAE5', text: '#059669', label: 'Booking Confirmed' };
+        return { bg: colors.successBg, text: colors.successText, label: 'Booking Confirmed' };
       case 'rejected':
-        return { bg: '#FEE2E2', text: '#DC2626', label: 'Declined' };
+        return { bg: colors.errorBg, text: colors.errorText, label: 'Declined' };
       case 'completed':
-        return { bg: '#F1F5F9', text: '#475569', label: 'Completed' };
+        return { bg: colors.surfaceMuted, text: colors.textSecondary, label: 'Completed' };
       default:
-        return { bg: '#F1F5F9', text: '#64748B', label: status || 'Unknown' };
+        return { bg: colors.surfaceMuted, text: colors.textMuted, label: status || 'Unknown' };
     }
   };
 

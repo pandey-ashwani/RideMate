@@ -6,6 +6,7 @@ import { API_BASE_URL } from '../../utils/config';
 import HeaderBar from '../../components/Common/HeaderBar';
 import OwnerBookingRequestCard from '../../components/Bookings/OwnerBookingRequestCard';
 import EmptyState from '../../components/Common/EmptyState';
+import colors from '../../theme/colors';
 
 export const BookingRequestsScreen = () => {
   const [requests, setRequests] = useState([]);
@@ -53,7 +54,7 @@ export const BookingRequestsScreen = () => {
         data={requests}
         keyExtractor={(item) => item._id}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchOwnerRequests(); }} colors={['#0284C7']} />
+          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchOwnerRequests(); }} colors={[colors.primaryDark]} />
         }
         renderItem={({ item }) => (
           <OwnerBookingRequestCard
@@ -76,7 +77,7 @@ export const BookingRequestsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   listContent: {
     padding: 16,

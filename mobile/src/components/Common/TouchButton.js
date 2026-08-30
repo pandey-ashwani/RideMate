@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import colors from '../../theme/colors';
 
 export const TouchButton = ({
   title,
@@ -11,32 +12,33 @@ export const TouchButton = ({
   textStyle,
 }) => {
   const getBackgroundColor = () => {
-    if (disabled) return '#CBD5E1';
+    if (disabled) return colors.disabledBg;
     switch (variant) {
       case 'primary':
-        return '#0284C7'; // Sky primary blue
+        return colors.primary; // RideMate Brand Golden Yellow
       case 'secondary':
-        return '#0F172A'; // Slate dark
+        return colors.dark;    // Dark Navy
       case 'outline':
         return 'transparent';
       case 'danger':
-        return '#EF4444';
+        return colors.error;
       case 'success':
-        return '#10B981';
+        return colors.success;
       default:
-        return '#0284C7';
+        return colors.primary;
     }
   };
 
   const getTextColor = () => {
-    if (disabled) return '#64748B';
-    if (variant === 'outline') return '#0284C7';
-    return '#FFFFFF';
+    if (disabled) return colors.disabledText;
+    if (variant === 'primary') return colors.textOnPrimary; // Dark Navy on Yellow
+    if (variant === 'outline') return colors.textPrimary;
+    return colors.textLight;
   };
 
   return (
     <TouchableOpacity
-      activeOpacity={0.8}
+      activeOpacity={0.85}
       onPress={onPress}
       disabled={disabled || loading}
       style={[
@@ -49,7 +51,14 @@ export const TouchButton = ({
       {loading ? (
         <ActivityIndicator color={getTextColor()} size="small" />
       ) : (
-        <Text style={[styles.text, { color: getTextColor() }, textStyle]}>
+        <Text
+          style={[
+            styles.text,
+            { color: getTextColor() },
+            variant === 'primary' && styles.primaryText,
+            textStyle,
+          ]}
+        >
           {title}
         </Text>
       )}
@@ -60,25 +69,29 @@ export const TouchButton = ({
 const styles = StyleSheet.create({
   button: {
     minHeight: 50,
-    borderRadius: 12,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 13,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
   },
   outlineBorder: {
     borderWidth: 1.5,
-    borderColor: '#0284C7',
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   text: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     letterSpacing: 0.2,
+  },
+  primaryText: {
+    fontWeight: '800',
   },
 });
 

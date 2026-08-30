@@ -6,6 +6,7 @@ import { confirmBookingDetailsApi, uploadProtectedDocumentApi } from '../../api/
 import HeaderBar from '../../components/Common/HeaderBar';
 import TouchButton from '../../components/Common/TouchButton';
 import CustomInput from '../../components/Common/CustomInput';
+import colors from '../../theme/colors';
 
 export const BookingConfirmationScreen = ({ route, navigation }) => {
   const { user } = useAuth();
@@ -104,7 +105,7 @@ export const BookingConfirmationScreen = ({ route, navigation }) => {
               title={loading ? 'Confirming...' : 'Submit & Confirm Booking'}
               onPress={handleSubmitDetails}
               loading={loading}
-              variant="success"
+              variant="primary"
               style={{ marginTop: 12 }}
             />
           </View>
@@ -118,14 +119,14 @@ export const BookingConfirmationScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   container: {
     padding: 16,
   },
   noticeBox: {
-    backgroundColor: '#ECFDF5',
-    borderColor: '#A7F3D0',
+    backgroundColor: colors.successBg,
+    borderColor: colors.successBorder,
     borderWidth: 1,
     borderRadius: 16,
     padding: 14,
@@ -140,42 +141,44 @@ const styles = StyleSheet.create({
   noticeTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#065F46',
+    color: colors.successText,
   },
   noticeSub: {
     fontSize: 12,
-    color: '#047857',
+    color: colors.successText,
     marginTop: 2,
     lineHeight: 16,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 20,
     elevation: 2,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.border,
   },
   errorBox: {
-    backgroundColor: '#FEF2F2',
-    borderColor: '#FECACA',
+    backgroundColor: colors.errorBg,
+    borderColor: colors.errorBorder,
     borderWidth: 1,
     padding: 10,
     borderRadius: 10,
     marginBottom: 14,
   },
   errorText: {
-    color: '#DC2626',
+    color: colors.errorText,
     fontSize: 12,
     fontWeight: '700',
   },
   docShieldBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.surfaceMuted,
     padding: 12,
     borderRadius: 12,
     marginVertical: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   shieldIcon: {
     fontSize: 18,
@@ -183,7 +186,7 @@ const styles = StyleSheet.create({
   },
   shieldText: {
     fontSize: 11,
-    color: '#475569',
+    color: colors.textSecondary,
     fontWeight: '600',
     flex: 1,
     lineHeight: 15,

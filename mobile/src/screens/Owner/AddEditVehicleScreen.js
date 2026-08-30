@@ -7,6 +7,7 @@ import { resolveImageUrl } from '../../utils/config';
 import HeaderBar from '../../components/Common/HeaderBar';
 import TouchButton from '../../components/Common/TouchButton';
 import CustomInput from '../../components/Common/CustomInput';
+import colors from '../../theme/colors';
 
 export const AddEditVehicleScreen = ({ route, navigation }) => {
   const existingVehicle = route.params?.vehicle;
@@ -50,24 +51,21 @@ export const AddEditVehicleScreen = ({ route, navigation }) => {
       }
     } catch (err) {
       console.error('Image upload error:', err);
-      setError(err.message || 'Failed to upload image from device');
+      setError('Failed to upload image. Please try again.');
     } finally {
       setImageUploading(false);
     }
   };
 
-  const handleSubmit = async () => {
-    if (!name || !brand || !pricePerDay || !location) {
-      setError('Please fill in all vehicle details.');
+  const handleSave = async () => {
+    if (!name.trim() || !pricePerDay || !location.trim()) {
+      setError('Vehicle Name, Daily Price, and Location are required fields.');
       return;
     }
 
-    if (user?.role === 'owner' && !user?.isVerified && user?.verificationStatus !== 'approved') {
-      setError('Verification Required: Admin approval is required before listing vehicles.');
-      Alert.alert(
-        'Verification Required 🛑',
-        'Your vehicle owner account is currently pending Admin verification. Admin approval is required before listing vehicles.'
-      );
+    const parsedPrice = parseFloat(pricePerDay);
+    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+      setError('Please enter a valid positive daily rate.');
       return;
     }
 
@@ -76,41 +74,44 @@ export const AddEditVehicleScreen = ({ route, navigation }) => {
 
     const payload = {
       name: name.trim(),
-      brand: brand.trim(),
+      brand: brand.trim() || 'RideMate Fleet',
       type,
-      pricePerDay: Number(pricePerDay),
+      pricePerDay: parsedPrice,
       location: location.trim(),
-      image: image.trim() || undefined,
-      availability: existingVehicle ? existingVehicle.availability : true,
+      image: image || '/uploads/vehicles/default-vehicle.jpg',
     };
 
     try {
       if (isEditing) {
         await updateVehicleApi(existingVehicle._id, payload);
-        Alert.alert('Updated! ✅', 'Vehicle listing updated successfully.', [
+        Alert.alert('Success 🎉', 'Vehicle details updated successfully!', [
           { text: 'OK', onPress: () => navigation.goBack() }
         ]);
       } else {
         await createVehicleApi(payload);
-        Alert.alert('Created! 🥳', 'Your new vehicle has been listed for rental.', [
+        Alert.alert('Success 🎉', 'New vehicle listing added to your fleet!', [
           { text: 'OK', onPress: () => navigation.goBack() }
         ]);
       }
     } catch (err) {
-      setError(err.message || 'Failed to save vehicle listing');
+      console.error('Save vehicle error:', err);
+      setError(err.message || 'Failed to save vehicle listing.');
     } finally {
       setLoading(false);
     }
   };
 
-  const previewUrl = image ? resolveImageUrl(image) : null;
-
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
-      <HeaderBar title={isEditing ? 'Edit Vehicle' : 'List New Vehicle'} showBack onBackPress={() => navigation.goBack()} />
+      <HeaderBar
+        title={isEditing ? 'Edit Vehicle Listing' : 'Add New Vehicle'}
+        showBack
+        onBackPress={() => navigation.goBack()}
+      />
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          
           <View style={styles.card}>
             {error ? (
               <View style={styles.errorBox}>
@@ -118,83 +119,107 @@ export const AddEditVehicleScreen = ({ route, navigation }) => {
               </View>
             ) : null}
 
-            <Text style={styles.sectionLabel}>Select Vehicle Type</Text>
+            {/* Vehicle Type Selector */}
+            <Text style={styles.sectionLabel}>Vehicle Category</Text>
             <View style={styles.typeSelector}>
-              {['scooter', 'bike', 'car'].map((t) => (
-                <TouchableOpacity
-                  key={t}
-                  onPress={() => setType(t)}
-                  style={[styles.typeOption, type === t && styles.typeOptionActive]}
-                >
-                  <Text style={[styles.typeOptionText, type === t && styles.typeOptionTextActive]}>
-                    {t === 'scooter' ? '🛵 Scooter' : t === 'bike' ? '🏍️ Bike' : '🚗 Car'}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              <TouchableOpacity
+                onPress={() => setType('scooter')}
+                style={[styles.typeOption, type === 'scooter' && styles.typeOptionActive]}
+              >
+                <Text style={[styles.typeOptionText, type === 'scooter' && styles.typeOptionTextActive]}>
+                  🛵 Scooter
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setType('bike')}
+                style={[styles.typeOption, type === 'bike' && styles.typeOptionActive]}
+              >
+                <Text style={[styles.typeOptionText, type === 'bike' && styles.typeOptionTextActive]}>
+                  🏍️ Bike
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setType('car')}
+                style={[styles.typeOption, type === 'car' && styles.typeOptionActive]}
+              >
+                <Text style={[styles.typeOptionText, type === 'car' && styles.typeOptionTextActive]}>
+                  🚗 Car
+                </Text>
+              </TouchableOpacity>
             </View>
 
-            {/* Photo Selection Card */}
+            {/* Image Picker */}
             <Text style={styles.sectionLabel}>Vehicle Photo</Text>
             <View style={styles.imagePickerBox}>
-              {previewUrl ? (
-                <Image source={{ uri: previewUrl }} style={styles.previewImage} resizeMode="cover" />
+              {image ? (
+                <Image
+                  source={{ uri: resolveImageUrl(image) }}
+                  style={styles.previewImage}
+                  resizeMode="cover"
+                />
               ) : (
                 <View style={styles.placeholderImage}>
                   <Text style={styles.placeholderIcon}>📸</Text>
-                  <Text style={styles.placeholderText}>No photo selected yet</Text>
+                  <Text style={styles.placeholderText}>No photo selected</Text>
                 </View>
               )}
 
               <TouchableOpacity
-                activeOpacity={0.8}
                 onPress={handlePickImage}
                 disabled={imageUploading}
                 style={styles.uploadBtn}
               >
                 {imageUploading ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <ActivityIndicator color={colors.textOnPrimary} size="small" />
                 ) : (
-                  <Text style={styles.uploadBtnText}>📷 Select Photo from Device Gallery</Text>
+                  <Text style={styles.uploadBtnText}>
+                    {image ? '📷 Change Photo' : '📁 Upload Vehicle Photo'}
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
 
+            {/* Inputs */}
             <CustomInput
-              label="Vehicle Model Name"
+              label="Vehicle Name / Model"
               value={name}
               onChangeText={setName}
-              placeholder="e.g. Honda Activa 6G / Royal Enfield 350"
+              placeholder="e.g. Activa 6G / Royal Enfield 350"
             />
 
             <CustomInput
               label="Brand / Make"
               value={brand}
               onChangeText={setBrand}
-              placeholder="e.g. Honda, Yamaha, Royal Enfield"
+              placeholder="e.g. Honda / Royal Enfield / Hyundai"
             />
 
             <CustomInput
-              label="Daily Rental Rate (₹/day)"
+              label="Rental Price Per Day (₹)"
               value={pricePerDay}
               onChangeText={setPricePerDay}
               placeholder="e.g. 500"
-              keyboardType="number-pad"
+              keyboardType="numeric"
             />
 
             <CustomInput
-              label="Depot / Pickup Location"
+              label="Pickup Location / Station"
               value={location}
               onChangeText={setLocation}
-              placeholder="e.g. Dehradun City Depot"
+              placeholder="e.g. Dehradun Clock Tower Depot"
             />
 
             <TouchButton
-              title={loading ? 'Saving...' : isEditing ? 'Update Vehicle' : 'Publish Listing'}
-              onPress={handleSubmit}
+              title={loading ? 'Saving...' : isEditing ? 'Save Changes' : '+ Publish Listing'}
+              onPress={handleSave}
               loading={loading}
-              style={{ marginTop: 8 }}
+              variant="primary"
+              style={{ marginTop: 12 }}
             />
           </View>
+
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -204,38 +229,40 @@ export const AddEditVehicleScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   container: {
     padding: 16,
+    paddingBottom: 90,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 20,
     elevation: 2,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.border,
   },
   errorBox: {
-    backgroundColor: '#FEF2F2',
-    borderColor: '#FECACA',
+    backgroundColor: colors.errorBg,
+    borderColor: colors.errorBorder,
     borderWidth: 1,
     padding: 10,
     borderRadius: 10,
     marginBottom: 14,
   },
   errorText: {
-    color: '#DC2626',
+    color: colors.errorText,
     fontSize: 12,
     fontWeight: '700',
   },
   sectionLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#475569',
+    fontSize: 12,
+    fontWeight: '800',
+    color: colors.textSecondary,
     marginBottom: 8,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   typeSelector: {
     flexDirection: 'row',
@@ -245,28 +272,29 @@ const styles = StyleSheet.create({
   typeOption: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    backgroundColor: colors.surfaceMuted,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderWidth: 1.5,
+    borderColor: colors.border,
   },
   typeOptionActive: {
-    backgroundColor: '#0284C7',
-    borderColor: '#0284C7',
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryDark,
   },
   typeOptionText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#475569',
+    color: colors.textSecondary,
   },
   typeOptionTextActive: {
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
+    fontWeight: '900',
   },
   imagePickerBox: {
-    backgroundColor: '#F8FAFC',
-    borderColor: '#E2E8F0',
-    borderWidth: 1,
+    backgroundColor: colors.surfaceMuted,
+    borderColor: colors.border,
+    borderWidth: 1.5,
     borderRadius: 14,
     padding: 12,
     alignItems: 'center',
@@ -281,7 +309,7 @@ const styles = StyleSheet.create({
   placeholderImage: {
     width: '100%',
     height: 120,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.borderLight,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
@@ -293,19 +321,19 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.textMuted,
     fontWeight: '600',
   },
   uploadBtn: {
-    backgroundColor: '#0284C7',
-    paddingVertical: 10,
+    backgroundColor: colors.primary,
+    paddingVertical: 11,
     paddingHorizontal: 16,
     borderRadius: 10,
     width: '100%',
     alignItems: 'center',
   },
   uploadBtnText: {
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
     fontSize: 13,
     fontWeight: '800',
   },

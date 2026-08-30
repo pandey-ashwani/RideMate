@@ -42,6 +42,13 @@ export const forgotPasswordApi = async (email) => {
   });
 };
 
+export const verifyResetOtpApi = async (email, otp) => {
+  return apiFetch('/auth/verify-reset-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email, otp }),
+  });
+};
+
 export const resetPasswordApi = async (email, otp, newPassword) => {
   return apiFetch('/auth/reset-password', {
     method: 'POST',

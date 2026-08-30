@@ -4,21 +4,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import TouchButton from '../../components/Common/TouchButton';
 import CustomInput from '../../components/Common/CustomInput';
+import colors from '../../theme/colors';
 
 export const LoginScreen = ({ navigation }) => {
-  const { login, forgotPassword, resetPassword, resendOtp } = useAuth();
+  const { login, forgotPassword, verifyResetOtp, resetPassword, resendOtp } = useAuth();
   const [role, setRole] = useState('customer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Forgot Password States
+  // Forgot password multi-step state: 'email' (Step 1) | 'otp' (Step 2) | 'password' (Step 3) | 'success' (Step 4)
   const [isForgotMode, setIsForgotMode] = useState(false);
-  const [forgotStep, setForgotStep] = useState('email'); // 'email' | 'reset'
+  const [forgotStep, setForgotStep] = useState('email');
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotOtp, setForgotOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSuccess, setForgotSuccess] = useState('');
   const [devOtpCode, setDevOtpCode] = useState('');
@@ -34,7 +36,7 @@ export const LoginScreen = ({ navigation }) => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      setError('Please enter both email address and password.');
+      setError('Please enter your email and password.');
       return;
     }
 
@@ -63,9 +65,10 @@ export const LoginScreen = ({ navigation }) => {
     }
   };
 
+  // STEP 1: Submit Email to receive OTP
   const handleSendResetCode = async () => {
     if (!forgotEmail || !forgotEmail.includes('@')) {
-      setError('Please enter a valid email address.');
+      setError('Please enter a valid registered email address.');
       return;
     }
 
@@ -77,22 +80,48 @@ export const LoginScreen = ({ navigation }) => {
     setForgotLoading(false);
 
     if (res.success) {
-      setForgotStep('reset');
-      if (res.devOtp || res.otp) setDevOtpCode(String(res.devOtp || res.otp));
-      setForgotSuccess(res.message || 'Reset code sent to your email.');
+      setForgotStep('otp');
+      if (res.devOtp || res.otp) {
+        setDevOtpCode(String(res.devOtp || res.otp));
+      }
+      setForgotSuccess(res.message || 'Verification code generated.');
+      setResendCooldown(60);
     } else {
       setError(res.message || 'Failed to send password reset code.');
     }
   };
 
-  const handleResetPasswordSubmit = async () => {
+  // STEP 2: Verify 6-digit OTP
+  const handleVerifyResetOtp = async () => {
     if (!forgotOtp || forgotOtp.trim().length !== 6) {
       setError('Please enter the 6-digit verification code.');
       return;
     }
 
+    setError('');
+    setForgotSuccess('');
+    setForgotLoading(true);
+
+    const res = await verifyResetOtp(forgotEmail.trim(), forgotOtp.trim());
+    setForgotLoading(false);
+
+    if (res.success) {
+      setForgotStep('password');
+      setForgotSuccess('Code verified! Please create your new password.');
+    } else {
+      setError(res.message || 'Invalid verification code. Please check and try again.');
+    }
+  };
+
+  // STEP 3: Reset password & save
+  const handleResetPasswordSubmit = async () => {
     if (!newPassword || newPassword.length < 6) {
       setError('New password must be at least 6 characters long.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match. Please re-enter.');
       return;
     }
 
@@ -104,18 +133,18 @@ export const LoginScreen = ({ navigation }) => {
     setForgotLoading(false);
 
     if (res.success) {
-      Alert.alert('Success 🔑', 'Password reset successfully! Please log in with your new password.', [{ text: 'OK' }]);
+      setForgotStep('success');
       setEmail(forgotEmail);
       setPassword('');
-      setIsForgotMode(false);
       setError('');
     } else {
       setError(res.message || 'Failed to reset password.');
     }
   };
 
+  // Resend OTP
   const handleResendResetCode = async () => {
-    if (resendCooldown > 0) return;
+    if (resendCooldown > 0 || forgotLoading) return;
     setError('');
     setForgotSuccess('');
     setForgotLoading(true);
@@ -125,10 +154,10 @@ export const LoginScreen = ({ navigation }) => {
 
     if (res.success) {
       if (res.devOtp || res.otp) setDevOtpCode(String(res.devOtp || res.otp));
-      setForgotSuccess(res.message || 'A new reset code has been sent to your email.');
+      setForgotSuccess('A new verification code has been generated.');
       setResendCooldown(60);
     } else {
-      setError(res.message || 'Failed to resend reset code.');
+      setError(res.message || 'Failed to resend code.');
     }
   };
 
@@ -140,7 +169,7 @@ export const LoginScreen = ({ navigation }) => {
           <View style={styles.brandHeader}>
             <Image
               source={require('../../../assets/icon.png')}
-              style={{ width: 72, height: 72, borderRadius: 16, marginBottom: 8 }}
+              style={styles.brandLogo}
               resizeMode="contain"
             />
             <Text style={styles.brandTitle}>RideMate</Text>
@@ -148,35 +177,48 @@ export const LoginScreen = ({ navigation }) => {
           </View>
 
           {/* Role selector Tabs */}
-          <View style={styles.roleTabs}>
-            <TouchableOpacity
-              onPress={() => setRole('customer')}
-              style={[styles.roleTab, role === 'customer' && styles.roleTabActive]}
-            >
-              <Text style={[styles.roleTabText, role === 'customer' && styles.roleTabTextActive]}>
-                👤 Customer
-              </Text>
-            </TouchableOpacity>
+          {!isForgotMode && (
+            <View style={styles.roleTabs}>
+              <TouchableOpacity
+                onPress={() => setRole('customer')}
+                style={[styles.roleTab, role === 'customer' && styles.roleTabActive]}
+              >
+                <Text style={[styles.roleTabText, role === 'customer' && styles.roleTabTextActive]}>
+                  👤 Customer
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => setRole('owner')}
-              style={[styles.roleTab, role === 'owner' && styles.roleTabActive]}
-            >
-              <Text style={[styles.roleTabText, role === 'owner' && styles.roleTabTextActive]}>
-                🔑 Vehicle Owner
-              </Text>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                onPress={() => setRole('owner')}
+                style={[styles.roleTab, role === 'owner' && styles.roleTabActive]}
+              >
+                <Text style={[styles.roleTabText, role === 'owner' && styles.roleTabTextActive]}>
+                  🔑 Vehicle Owner
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <View style={styles.formCard}>
             {isForgotMode ? (
               <>
                 <Text style={styles.formTitle}>Reset Password</Text>
-                <Text style={styles.forgotSubText}>
-                  {forgotStep === 'email'
-                    ? 'Enter your registered email address to receive a 6-digit verification code.'
-                    : `Enter the 6-digit code sent to ${forgotEmail} and your new password.`}
-                </Text>
+                
+                {forgotStep === 'email' && (
+                  <Text style={styles.forgotSubText}>
+                    Step 1 of 3: Enter your registered email address to receive a 6-digit verification code.
+                  </Text>
+                )}
+                {forgotStep === 'otp' && (
+                  <Text style={styles.forgotSubText}>
+                    Step 2 of 3: Enter the 6-digit verification code sent to {forgotEmail}.
+                  </Text>
+                )}
+                {forgotStep === 'password' && (
+                  <Text style={styles.forgotSubText}>
+                    Step 3 of 3: Choose a strong new password for your RideMate account.
+                  </Text>
+                )}
 
                 {error ? (
                   <View style={styles.errorBox}>
@@ -190,19 +232,8 @@ export const LoginScreen = ({ navigation }) => {
                   </View>
                 ) : null}
 
-                {devOtpCode && forgotStep === 'reset' ? (
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => setForgotOtp(devOtpCode)}
-                    style={{ backgroundColor: '#FEF3C7', padding: 12, borderRadius: 8, marginVertical: 8, alignItems: 'center' }}
-                  >
-                    <Text style={{ fontSize: 16, fontWeight: '800', color: '#92400E' }}>
-                      OTP : {devOtpCode}
-                    </Text>
-                  </TouchableOpacity>
-                ) : null}
-
-                {forgotStep === 'email' ? (
+                {/* STEP 1: Enter Email */}
+                {forgotStep === 'email' && (
                   <>
                     <CustomInput
                       label="Email Address"
@@ -214,28 +245,77 @@ export const LoginScreen = ({ navigation }) => {
                     />
 
                     <TouchButton
-                      title={forgotLoading ? 'Sending Code...' : 'Send Reset Code'}
+                      title={forgotLoading ? 'Sending Code...' : 'Send Verification Code'}
                       onPress={handleSendResetCode}
                       loading={forgotLoading}
                       style={{ marginTop: 8 }}
                     />
                   </>
-                ) : (
+                )}
+
+                {/* STEP 2: Enter OTP & Show Development OTP clearly */}
+                {forgotStep === 'otp' && (
                   <>
+                    {devOtpCode ? (
+                      <TouchableOpacity
+                        activeOpacity={0.85}
+                        onPress={() => setForgotOtp(devOtpCode)}
+                        style={styles.devOtpContainer}
+                      >
+                        <Text style={styles.devOtpLabel}>🛠️ DEVELOPMENT OTP (TAP TO AUTO-FILL)</Text>
+                        <Text style={styles.devOtpCodeText}>OTP : {devOtpCode}</Text>
+                      </TouchableOpacity>
+                    ) : null}
+
                     <CustomInput
-                      label="6-Digit Reset Code"
+                      label="6-Digit Verification Code"
                       value={forgotOtp}
-                      onChangeText={setForgotOtp}
+                      onChangeText={(text) => {
+                        setError('');
+                        setForgotOtp(text.replace(/[^0-9]/g, '').slice(0, 6));
+                      }}
                       placeholder="123456"
                       keyboardType="number-pad"
                       maxLength={6}
+                      autoFocus
                     />
 
+                    <TouchButton
+                      title={forgotLoading ? 'Verifying...' : 'Verify Code'}
+                      onPress={handleVerifyResetOtp}
+                      loading={forgotLoading}
+                      disabled={forgotOtp.length !== 6 || forgotLoading}
+                      style={{ marginTop: 8 }}
+                    />
+
+                    <TouchableOpacity
+                      disabled={resendCooldown > 0 || forgotLoading}
+                      onPress={handleResendResetCode}
+                      style={{ alignSelf: 'center', marginTop: 14 }}
+                    >
+                      <Text style={[styles.resendLinkText, resendCooldown > 0 && styles.resendDisabled]}>
+                        {resendCooldown > 0 ? `Resend Code in ${resendCooldown}s` : "Didn't receive code? Resend Code"}
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+
+                {/* STEP 3: Enter New Password & Confirm Password */}
+                {forgotStep === 'password' && (
+                  <>
                     <CustomInput
                       label="New Password"
                       value={newPassword}
                       onChangeText={setNewPassword}
                       placeholder="Enter new strong password"
+                      secureTextEntry
+                    />
+
+                    <CustomInput
+                      label="Confirm New Password"
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                      placeholder="Re-enter your new password"
                       secureTextEntry
                     />
 
@@ -245,28 +325,43 @@ export const LoginScreen = ({ navigation }) => {
                       loading={forgotLoading}
                       style={{ marginTop: 8 }}
                     />
-
-                    <TouchableOpacity
-                      disabled={resendCooldown > 0 || forgotLoading}
-                      onPress={handleResendResetCode}
-                      style={{ alignSelf: 'center', marginTop: 12 }}
-                    >
-                      <Text style={{ fontSize: 12, fontWeight: '700', color: resendCooldown > 0 ? '#94A3B8' : '#0284C7' }}>
-                        {resendCooldown > 0 ? `Resend Code in ${resendCooldown}s` : "Didn't receive code? Resend Code"}
-                      </Text>
-                    </TouchableOpacity>
                   </>
                 )}
 
-                <TouchableOpacity
-                  style={styles.backToLoginRow}
-                  onPress={() => {
-                    setIsForgotMode(false);
-                    setError('');
-                  }}
-                >
-                  <Text style={styles.backToLoginText}>← Back to Login</Text>
-                </TouchableOpacity>
+                {/* STEP 4: Success Message & Redirect to Login */}
+                {forgotStep === 'success' && (
+                  <View style={{ alignItems: 'center', paddingVertical: 10 }}>
+                    <Text style={{ fontSize: 40, marginBottom: 8 }}>🎉</Text>
+                    <Text style={[styles.formTitle, { textAlign: 'center', marginBottom: 6 }]}>Password Reset Complete!</Text>
+                    <Text style={[styles.forgotSubText, { textAlign: 'center', marginBottom: 18 }]}>
+                      Your password has been updated successfully. You can now log in with your new password.
+                    </Text>
+                    <TouchButton
+                      title="Return to Login"
+                      onPress={() => {
+                        setIsForgotMode(false);
+                        setForgotStep('email');
+                        setForgotSuccess('');
+                        setError('');
+                      }}
+                      style={{ width: '100%' }}
+                    />
+                  </View>
+                )}
+
+                {forgotStep !== 'success' && (
+                  <TouchableOpacity
+                    style={styles.backToLoginRow}
+                    onPress={() => {
+                      setIsForgotMode(false);
+                      setForgotStep('email');
+                      setError('');
+                      setForgotSuccess('');
+                    }}
+                  >
+                    <Text style={styles.backToLoginText}>← Back to Login</Text>
+                  </TouchableOpacity>
+                )}
               </>
             ) : (
               <>
@@ -336,7 +431,7 @@ export const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: colors.dark,
   },
   container: {
     padding: 20,
@@ -345,43 +440,32 @@ const styles = StyleSheet.create({
   },
   brandHeader: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
-  logoBadge: {
-    width: 60,
-    height: 60,
+  brandLogo: {
+    width: 72,
+    height: 72,
     borderRadius: 16,
-    backgroundColor: '#F59E0B',
-    alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 10,
-    elevation: 4,
-    shadowColor: '#F59E0B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-  },
-  logoText: {
-    fontSize: 26,
-    fontWeight: '900',
-    color: '#0F172A',
   },
   brandTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: colors.textLight,
   },
   brandSub: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: colors.textMuted,
     marginTop: 2,
   },
   roleTabs: {
     flexDirection: 'row',
-    backgroundColor: '#1E293B',
+    backgroundColor: colors.darkSurface,
     borderRadius: 12,
     padding: 4,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.darkBorder,
   },
   roleTab: {
     flex: 1,
@@ -390,83 +474,88 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   roleTabActive: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: colors.primary,
   },
   roleTabText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: colors.textMuted,
   },
   roleTabTextActive: {
-    color: '#0F172A',
+    color: colors.textOnPrimary,
+    fontWeight: '800',
   },
   formCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 20,
-    padding: 20,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: colors.border,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
   formTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#0F172A',
-    marginBottom: 16,
+    fontSize: 20,
+    fontWeight: '900',
+    color: colors.textPrimary,
+    marginBottom: 14,
   },
   forgotSubText: {
-    fontSize: 12,
-    color: '#64748B',
+    fontSize: 13,
+    color: colors.textSecondary,
     marginBottom: 16,
+    lineHeight: 18,
   },
   errorBox: {
-    backgroundColor: '#FEF2F2',
-    borderColor: '#FECACA',
+    backgroundColor: colors.errorBg,
+    borderColor: colors.errorBorder,
     borderWidth: 1,
     padding: 10,
     borderRadius: 10,
     marginBottom: 14,
   },
   errorText: {
-    color: '#DC2626',
+    color: colors.errorText,
     fontSize: 12,
     fontWeight: '700',
   },
   successBox: {
-    backgroundColor: '#ECFDF5',
-    borderColor: '#A7F3D0',
+    backgroundColor: colors.successBg,
+    borderColor: colors.successBorder,
     borderWidth: 1,
     padding: 10,
     borderRadius: 10,
     marginBottom: 14,
   },
   successText: {
-    color: '#059669',
+    color: colors.successText,
     fontSize: 12,
     fontWeight: '700',
   },
-  devOtpBox: {
-    backgroundColor: '#FEF3C7',
-    borderColor: '#F59E0B',
+  devOtpContainer: {
+    backgroundColor: colors.infoBg,
+    borderColor: colors.infoBorder,
     borderWidth: 1.5,
     borderRadius: 14,
-    padding: 10,
+    padding: 12,
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 16,
   },
-  devOtpBadge: {
-    fontSize: 10,
-    fontWeight: '900',
-    color: '#B45309',
-  },
-  devOtpCode: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#78350F',
-    letterSpacing: 4,
-    marginVertical: 2,
-  },
-  devOtpHint: {
+  devOtpLabel: {
     fontSize: 11,
-    color: '#B45309',
-    fontWeight: '700',
+    fontWeight: '900',
+    color: colors.infoText,
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  devOtpCodeText: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: colors.textPrimary,
+    letterSpacing: 3,
   },
   forgotBtnRow: {
     alignSelf: 'flex-end',
@@ -474,33 +563,41 @@ const styles = StyleSheet.create({
     marginTop: -4,
   },
   forgotBtnText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '800',
-    color: '#0284C7',
+    color: colors.tabActive,
+  },
+  resendLinkText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: colors.tabActive,
+  },
+  resendDisabled: {
+    color: colors.disabledText,
   },
   backToLoginRow: {
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 18,
     paddingVertical: 4,
   },
   backToLoginText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#64748B',
+    color: colors.textSecondary,
   },
   footerLinkRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 16,
+    marginTop: 18,
   },
   footerText: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.textSecondary,
   },
   linkText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#0284C7',
+    color: colors.tabActive,
   },
 });
 

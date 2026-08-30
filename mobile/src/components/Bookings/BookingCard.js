@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import StatusBadge from '../Common/StatusBadge';
 import TouchButton from '../Common/TouchButton';
+import colors from '../../theme/colors';
 
 export const BookingCard = ({ booking, onConfirmPress, onCancelPress }) => {
   const vehicle = booking.vehicleId || {};
@@ -56,7 +57,7 @@ export const BookingCard = ({ booking, onConfirmPress, onCancelPress }) => {
           <TouchButton
             title="Submit License & Confirm"
             onPress={() => onConfirmPress(booking)}
-            variant="success"
+            variant="primary"
             style={{ marginTop: 8 }}
           />
         </View>
@@ -73,12 +74,12 @@ export const BookingCard = ({ booking, onConfirmPress, onCancelPress }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.border,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -98,11 +99,11 @@ const styles = StyleSheet.create({
   vehicleName: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   brand: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.textSecondary,
     fontWeight: '600',
     marginTop: 2,
   },
@@ -110,10 +111,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceMuted,
     padding: 12,
     borderRadius: 12,
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
   dateBlock: {
     alignItems: 'flex-start',
@@ -124,23 +127,23 @@ const styles = StyleSheet.create({
   dateLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: colors.textMuted,
     textTransform: 'uppercase',
   },
   dateValue: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
     marginTop: 2,
   },
   costValue: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '900',
-    color: '#0284C7',
+    color: colors.tabActive,
     marginTop: 2,
   },
   arrow: {
-    color: '#CBD5E1',
+    color: colors.textMuted,
     fontSize: 14,
     fontWeight: 'bold',
   },
@@ -150,35 +153,37 @@ const styles = StyleSheet.create({
   },
   locationLabel: {
     fontSize: 11,
-    color: '#64748B',
+    color: colors.textSecondary,
     fontWeight: '700',
   },
   locationValue: {
     fontSize: 13,
-    color: '#0F172A',
+    color: colors.textPrimary,
     fontWeight: '600',
     marginTop: 2,
   },
   actionBox: {
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    backgroundColor: colors.successBg,
+    borderColor: colors.successBorder,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 8,
   },
   actionNotice: {
     fontSize: 12,
-    color: '#047857',
     fontWeight: '700',
+    color: colors.successText,
     lineHeight: 16,
   },
   cancelLink: {
     alignSelf: 'center',
-    marginTop: 10,
-    paddingVertical: 4,
+    paddingVertical: 6,
+    marginTop: 4,
   },
   cancelText: {
+    color: colors.error,
     fontSize: 12,
-    color: '#EF4444',
     fontWeight: '700',
   },
 });

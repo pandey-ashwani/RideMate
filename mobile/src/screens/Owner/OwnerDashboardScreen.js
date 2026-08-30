@@ -7,6 +7,7 @@ import { getVehiclesApi } from '../../api/vehicles';
 import HeaderBar from '../../components/Common/HeaderBar';
 import OwnerBookingRequestCard from '../../components/Bookings/OwnerBookingRequestCard';
 import TouchButton from '../../components/Common/TouchButton';
+import colors from '../../theme/colors';
 
 export const OwnerDashboardScreen = ({ navigation }) => {
   const { user } = useAuth();
@@ -55,7 +56,7 @@ export const OwnerDashboardScreen = ({ navigation }) => {
       <ScrollView
         contentContainerStyle={styles.container}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadDashboardData(); }} colors={['#0284C7']} />
+          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadDashboardData(); }} colors={[colors.primaryDark]} />
         }
       >
         <View style={styles.welcomeBanner}>
@@ -65,26 +66,26 @@ export const OwnerDashboardScreen = ({ navigation }) => {
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
-          <View style={[styles.statCard, { backgroundColor: '#E0F2FE' }]}>
-            <Text style={[styles.statNumber, { color: '#0284C7' }]}>{vehicles.length}</Text>
+          <View style={[styles.statCard, { backgroundColor: colors.infoBg, borderColor: colors.infoBorder, borderWidth: 1 }]}>
+            <Text style={[styles.statNumber, { color: colors.tabActive }]}>{vehicles.length}</Text>
             <Text style={styles.statLabel}>My Fleet</Text>
           </View>
 
-          <View style={[styles.statCard, { backgroundColor: '#FEF3C7' }]}>
-            <Text style={[styles.statNumber, { color: '#D97706' }]}>{pendingRequests.length}</Text>
+          <View style={[styles.statCard, { backgroundColor: colors.warningBg, borderColor: colors.warningBorder, borderWidth: 1 }]}>
+            <Text style={[styles.statNumber, { color: colors.warningText }]}>{pendingRequests.length}</Text>
             <Text style={styles.statLabel}>Pending</Text>
           </View>
 
-          <View style={[styles.statCard, { backgroundColor: '#D1FAE5' }]}>
-            <Text style={[styles.statNumber, { color: '#059669' }]}>{activeRentals.length}</Text>
-            <Text style={styles.statLabel}>Active Rides</Text>
+          <View style={[styles.statCard, { backgroundColor: colors.successBg, borderColor: colors.successBorder, borderWidth: 1 }]}>
+            <Text style={[styles.statNumber, { color: colors.successText }]}>{activeRentals.length}</Text>
+            <Text style={styles.statLabel}>Active</Text>
           </View>
         </View>
 
         {/* Quick Actions */}
         <View style={styles.actionRow}>
           <TouchButton
-            title="+ Add New Vehicle"
+            title="+ Add Vehicle"
             onPress={() => navigation.navigate('AddEditVehicle')}
             variant="primary"
             style={styles.actionBtn}
@@ -100,13 +101,12 @@ export const OwnerDashboardScreen = ({ navigation }) => {
         {/* Pending Requests Section */}
         {pendingRequests.length > 0 ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>⚠️ Action Required ({pendingRequests.length})</Text>
-            {pendingRequests.map(req => (
+            <Text style={styles.sectionTitle}>Pending Booking Requests ({pendingRequests.length})</Text>
+            {pendingRequests.map((req) => (
               <OwnerBookingRequestCard
                 key={req._id}
                 request={req}
-                onAccept={() => navigation.navigate('RequestsTab')}
-                onReject={() => navigation.navigate('RequestsTab')}
+                onActionSuccess={loadDashboardData}
               />
             ))}
           </View>
@@ -119,14 +119,14 @@ export const OwnerDashboardScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   container: {
     padding: 16,
     paddingBottom: 90,
   },
   welcomeBanner: {
-    backgroundColor: '#0F172A',
+    backgroundColor: colors.dark,
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
@@ -134,13 +134,13 @@ const styles = StyleSheet.create({
   welcomeSubtitle: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#38BDF8',
+    color: colors.primary,
     textTransform: 'uppercase',
   },
   welcomeTitle: {
     fontSize: 24,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: colors.textLight,
     marginTop: 4,
   },
   statsGrid: {
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#475569',
+    color: colors.textSecondary,
     marginTop: 2,
     textTransform: 'uppercase',
   },
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
     marginBottom: 12,
   },
 });

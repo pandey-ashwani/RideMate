@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import StatusBadge from '../Common/StatusBadge';
 import TouchButton from '../Common/TouchButton';
+import colors from '../../theme/colors';
 
 export const OwnerBookingRequestCard = ({ request, onAccept, onReject, onComplete, onViewDL }) => {
   const customer = request.customerId || {};
@@ -50,14 +51,14 @@ export const OwnerBookingRequestCard = ({ request, onAccept, onReject, onComplet
         <View style={styles.actionsRow}>
           <TouchButton
             title="Decline"
-            onPress={() => onReject(request._id)}
+            onPress={() => onReject && onReject(request._id)}
             variant="danger"
             style={styles.halfBtn}
           />
           <TouchButton
             title="Accept Request"
-            onPress={() => onAccept(request._id)}
-            variant="success"
+            onPress={() => onAccept && onAccept(request._id)}
+            variant="primary"
             style={styles.halfBtn}
           />
         </View>
@@ -77,12 +78,12 @@ export const OwnerBookingRequestCard = ({ request, onAccept, onReject, onComplet
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.border,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -102,52 +103,56 @@ const styles = StyleSheet.create({
   customerName: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   customerEmail: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   vehicleDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceMuted,
     padding: 10,
     borderRadius: 10,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
   vehicleName: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   priceTag: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '900',
-    color: '#0284C7',
+    color: colors.tabActive,
   },
   datesRow: {
     marginBottom: 6,
   },
   dateText: {
     fontSize: 12,
-    color: '#475569',
+    color: colors.textSecondary,
   },
   boldText: {
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   dlDetails: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: colors.infoBg,
+    borderColor: colors.infoBorder,
+    borderWidth: 1,
     padding: 10,
     borderRadius: 10,
     marginTop: 6,
   },
   dlText: {
     fontSize: 12,
-    color: '#1E40AF',
+    color: colors.infoText,
     marginBottom: 2,
   },
   actionsRow: {

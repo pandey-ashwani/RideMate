@@ -8,6 +8,7 @@ import { resolveImageUrl } from '../../utils/config';
 import HeaderBar from '../../components/Common/HeaderBar';
 import TouchButton from '../../components/Common/TouchButton';
 import CustomInput from '../../components/Common/CustomInput';
+import colors from '../../theme/colors';
 
 export const VehicleDetailsScreen = ({ route, navigation }) => {
   const { user } = useAuth();
@@ -423,13 +424,13 @@ const styles = StyleSheet.create({
   brand: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#0284C7',
+    color: colors.tabActive,
     textTransform: 'uppercase',
   },
   title: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#0F172A',
+    color: colors.textPrimary,
     marginTop: 2,
   },
   statusBadge: {
@@ -437,14 +438,14 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 20,
   },
-  availBg: { backgroundColor: '#D1FAE5' },
-  rentedBg: { backgroundColor: '#FEE2E2' },
+  availBg: { backgroundColor: colors.successBg },
+  rentedBg: { backgroundColor: colors.errorBg },
   statusText: { fontSize: 11, fontWeight: '800' },
-  availText: { color: '#059669', fontSize: 11, fontWeight: '800' },
-  rentedText: { color: '#DC2626', fontSize: 11, fontWeight: '800' },
+  availText: { color: colors.successText, fontSize: 11, fontWeight: '800' },
+  rentedText: { color: colors.errorText, fontSize: 11, fontWeight: '800' },
   location: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.textSecondary,
     fontWeight: '600',
     marginBottom: 16,
   },
@@ -452,52 +453,54 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceMuted,
     padding: 16,
     borderRadius: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.border,
   },
   priceLabel: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: colors.textMuted,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   priceValue: {
     fontSize: 24,
     fontWeight: '900',
-    color: '#0F172A',
+    color: colors.textPrimary,
     marginTop: 2,
   },
   perDay: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.textSecondary,
   },
   typeTag: {
-    backgroundColor: '#E0F2FE',
+    backgroundColor: colors.infoBg,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.infoBorder,
   },
   typeTagText: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#0284C7',
+    color: colors.tabActive,
   },
   sectionHeader: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
     marginBottom: 10,
   },
   datesBox: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.surfaceMuted,
     padding: 14,
     borderRadius: 14,
     marginBottom: 20,
@@ -508,18 +511,18 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#64748B',
+    color: colors.textSecondary,
     textTransform: 'uppercase',
   },
   fieldValue: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
     marginTop: 2,
   },
   dateArrow: {
     fontSize: 16,
-    color: '#94A3B8',
+    color: colors.textMuted,
     marginHorizontal: 8,
   },
   dateInputsRow: {
@@ -530,7 +533,7 @@ const styles = StyleSheet.create({
   quickLabel: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#64748B',
+    color: colors.textSecondary,
     marginBottom: 6,
     textTransform: 'uppercase',
   },
@@ -540,8 +543,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   durationChip: {
-    backgroundColor: '#F1F5F9',
-    borderColor: '#CBD5E1',
+    backgroundColor: colors.surfaceMuted,
+    borderColor: colors.border,
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -549,20 +552,21 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   durationChipActive: {
-    backgroundColor: '#0284C7',
-    borderColor: '#0284C7',
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryDark,
   },
   durationText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#475569',
+    color: colors.textSecondary,
   },
   durationTextActive: {
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
+    fontWeight: '800',
   },
   costSummaryBox: {
-    backgroundColor: '#F8FAFC',
-    borderColor: '#E2E8F0',
+    backgroundColor: colors.surfaceMuted,
+    borderColor: colors.border,
     borderWidth: 1,
     borderRadius: 14,
     padding: 14,
@@ -575,31 +579,31 @@ const styles = StyleSheet.create({
   },
   costRowLabel: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.textSecondary,
     fontWeight: '600',
   },
   costRowValue: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   costTotalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
+    borderTopColor: colors.border,
     paddingTop: 8,
     marginTop: 4,
   },
   costTotalLabel: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   costTotalValue: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#0284C7',
+    color: colors.tabActive,
   },
   dateSelectorRow: {
     flexDirection: 'row',
@@ -608,8 +612,8 @@ const styles = StyleSheet.create({
   },
   dateSelectorBtn: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderColor: '#0284C7',
+    backgroundColor: colors.surface,
+    borderColor: colors.primaryDark,
     borderWidth: 1.5,
     borderRadius: 14,
     padding: 12,
@@ -618,13 +622,13 @@ const styles = StyleSheet.create({
   dateSelectorValue: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
     marginVertical: 3,
   },
   tapChangeHint: {
     fontSize: 10,
-    fontWeight: '700',
-    color: '#0284C7',
+    fontWeight: '800',
+    color: colors.tabActive,
   },
   modalOverlay: {
     flex: 1,
@@ -632,7 +636,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -647,7 +651,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   closeBtnBox: {
     padding: 6,
@@ -655,11 +659,11 @@ const styles = StyleSheet.create({
   closeBtnText: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#64748B',
+    color: colors.textSecondary,
   },
   modalSub: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.textSecondary,
     marginBottom: 14,
   },
   datesList: {
@@ -671,32 +675,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
     borderRadius: 12,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceMuted,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.border,
   },
   dateOptionActive: {
-    backgroundColor: '#0284C7',
-    borderColor: '#0284C7',
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryDark,
   },
   dateOptionBadge: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   dateOptionFull: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   dateOptionActiveText: {
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
+    fontWeight: '800',
   },
   checkMark: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
   },
   ownerCard: {
     backgroundColor: '#EFF6FF',

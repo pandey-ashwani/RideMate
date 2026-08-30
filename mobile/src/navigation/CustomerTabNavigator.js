@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { House, Search, Bike, Bell, User } from 'lucide-react-native';
+import colors from '../theme/colors';
 
 import HomeScreen from '../screens/Customer/HomeScreen';
 import VehicleSearchScreen from '../screens/Customer/VehicleSearchScreen';
@@ -20,11 +21,11 @@ export const CustomerTabNavigator = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#0284C7',
-        tabBarInactiveTintColor: '#94A3B8',
+        tabBarActiveTintColor: colors.tabActive,
+        tabBarInactiveTintColor: colors.tabInactive,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E2E8F0',
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
           height: 56 + bottomInset,
           paddingBottom: bottomInset,
           paddingTop: 6,

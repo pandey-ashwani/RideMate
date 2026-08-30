@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { resolveImageUrl } from '../../utils/config';
+import colors from '../../theme/colors';
 
 export const VehicleCard = ({ vehicle, onPress }) => {
   const imageUrl = resolveImageUrl(vehicle.image);
@@ -53,22 +54,22 @@ export const VehicleCard = ({ vehicle, onPress }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderRadius: 18,
     marginBottom: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: colors.border,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.06,
     shadowRadius: 6,
   },
   image: {
     width: '100%',
     height: 160,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.surfaceMuted,
   },
   content: {
     padding: 14,
@@ -82,7 +83,7 @@ const styles = StyleSheet.create({
   brand: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#0284C7',
+    color: colors.tabActive,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -91,23 +92,23 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 6,
   },
-  carBadge: { backgroundColor: '#E0F2FE' },
-  scooterBadge: { backgroundColor: '#FEF3C7' },
-  bikeBadge: { backgroundColor: '#F3E8FF' },
+  carBadge: { backgroundColor: '#F1F5F9' },
+  scooterBadge: { backgroundColor: colors.infoBg },
+  bikeBadge: { backgroundColor: '#FDF4FF' },
   typeBadgeText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   title: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   location: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.textSecondary,
     fontWeight: '500',
     marginBottom: 12,
   },
@@ -117,33 +118,33 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#F8FAFC',
+    borderTopColor: colors.borderLight,
   },
   priceLabel: {
     fontSize: 10,
-    color: '#94A3B8',
+    color: colors.textMuted,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   price: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   perDay: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.textSecondary,
   },
   availBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 20,
   },
-  availTrue: { backgroundColor: '#D1FAE5' },
-  availFalse: { backgroundColor: '#FEE2E2' },
-  availTrueText: { color: '#059669', fontSize: 11, fontWeight: '800' },
-  availFalseText: { color: '#DC2626', fontSize: 11, fontWeight: '800' },
+  availTrue: { backgroundColor: colors.successBg },
+  availFalse: { backgroundColor: colors.errorBg },
+  availTrueText: { color: colors.successText, fontSize: 11, fontWeight: '800' },
+  availFalseText: { color: colors.errorText, fontSize: 11, fontWeight: '800' },
 });
 
 export default VehicleCard;

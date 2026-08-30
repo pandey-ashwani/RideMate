@@ -7,6 +7,7 @@ import HeaderBar from '../../components/Common/HeaderBar';
 import CategoryChip from '../../components/Common/CategoryChip';
 import VehicleCard from '../../components/Vehicles/VehicleCard';
 import EmptyState from '../../components/Common/EmptyState';
+import colors from '../../theme/colors';
 
 export const HomeScreen = ({ navigation }) => {
   const { user } = useAuth();
@@ -61,7 +62,7 @@ export const HomeScreen = ({ navigation }) => {
         data={vehicles}
         keyExtractor={(item) => item._id}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchVehicles(); }} colors={['#0284C7']} />
+          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchVehicles(); }} colors={[colors.primaryDark]} />
         }
         ListHeaderComponent={
           <View style={styles.headerContainer}>
@@ -104,7 +105,12 @@ export const HomeScreen = ({ navigation }) => {
           </View>
         )}
         ListEmptyComponent={
-          !loading ? <EmptyState title="No vehicles found" message="Try selecting a different category or refreshing." /> : null
+          !loading ? (
+            <EmptyState
+              title="No vehicles available right now"
+              message="Check back soon or try selecting a different category."
+            />
+          ) : null
         }
         contentContainerStyle={styles.listContent}
       />
@@ -112,12 +118,6 @@ export const HomeScreen = ({ navigation }) => {
   );
 };
 
-// const styles = StyleSheet.create({
-//   safeArea: {
-//     flex: 1,
-//     backgroundColor: '#F8FAFC',
-//   },
-//   headerContainer: {
 //     paddingHorizontal: 16,
 //     paddingTop: 16,
 //   },
@@ -198,7 +198,7 @@ export const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
 
   headerContainer: {
@@ -208,34 +208,42 @@ const styles = StyleSheet.create({
 
   /* Main yellow banner */
   banner: {
-    backgroundColor: '#FACC15',
+    backgroundColor: colors.primary,
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
   },
 
   greeting: {
     fontSize: 13,
-    color: '#713F12',
-    fontWeight: '700',
+    color: colors.textPrimary,
+    fontWeight: '800',
+    opacity: 0.85,
   },
 
   bannerTitle: {
     fontSize: 23,
     fontWeight: '900',
-    color: '#111827',
+    color: colors.textPrimary,
     marginTop: 4,
     marginBottom: 16,
   },
 
   /* Search bar */
   fakeSearchBar: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
     paddingVertical: 13,
-    borderRadius: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
 
   searchIcon: {
@@ -245,7 +253,7 @@ const styles = StyleSheet.create({
 
   searchPlaceholder: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.textMuted,
     fontWeight: '500',
   },
 
@@ -253,7 +261,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#111827',
+    color: colors.textPrimary,
     marginBottom: 12,
   },
 
@@ -270,9 +278,9 @@ const styles = StyleSheet.create({
   },
 
   countText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#A16207',
+    fontSize: 13,
+    fontWeight: '800',
+    color: colors.tabActive,
   },
 
   /* Vehicle cards */
@@ -286,14 +294,14 @@ const styles = StyleSheet.create({
 
   /* Login button */
   loginBtn: {
-    backgroundColor: '#FACC15',
+    backgroundColor: colors.primary,
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 9,
   },
 
   loginBtnText: {
-    color: '#111827',
+    color: colors.textOnPrimary,
     fontWeight: '800',
     fontSize: 12,
   },

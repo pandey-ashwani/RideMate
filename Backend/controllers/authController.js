@@ -980,6 +980,67 @@ export const forgotPassword = async (req, res, next) => {
   }
 };
 
+// @desc    Verify Password Reset 6-digit OTP
+// @route   POST /api/auth/verify-reset-otp
+// @access  Public
+export const verifyResetOtp = async (req, res, next) => {
+  const { email, otp } = req.body;
+
+  try {
+    if (!email || !otp) {
+      res.status(400);
+      throw new Error('Email and 6-digit verification code are required.');
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const rawOtp = otp.toString().trim();
+
+    const otpRecord = await OTPVerification.findOne({
+      email: normalizedEmail,
+      purpose: 'forgot_password',
+      used: false,
+      expiresAt: { $gt: new Date() }
+    }).sort({ createdAt: -1 });
+
+    if (!otpRecord) {
+      res.status(400);
+      throw new Error('Invalid or expired password reset code. Please request a new code.');
+    }
+
+    if (otpRecord.attempts >= 5) {
+      otpRecord.used = true;
+      await otpRecord.save();
+      res.status(400);
+      throw new Error('Too many failed attempts. Please request a new password reset code.');
+    }
+
+    const isMatch = await bcrypt.compare(rawOtp, otpRecord.otpHash);
+
+    if (!isMatch) {
+      otpRecord.attempts += 1;
+      await otpRecord.save();
+      const remaining = Math.max(0, 5 - otpRecord.attempts);
+
+      if (remaining <= 0) {
+        otpRecord.used = true;
+        await otpRecord.save();
+        res.status(400);
+        throw new Error('Maximum failed attempts reached. Please request a new password reset code.');
+      }
+
+      res.status(400);
+      throw new Error(`Invalid verification code. ${remaining} attempts remaining.`);
+    }
+
+    res.json({
+      success: true,
+      message: 'Verification code confirmed. Please set your new password.'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Reset Password using 6-digit Email OTP
 // @route   POST /api/auth/reset-password
 // @access  Public

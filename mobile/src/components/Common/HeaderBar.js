@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import colors from '../../theme/colors';
 
 export const HeaderBar = ({ title, showBack = false, onBackPress, rightElement }) => {
   const insets = useSafeAreaInsets();
@@ -13,9 +14,11 @@ export const HeaderBar = ({ title, showBack = false, onBackPress, rightElement }
             <Text style={styles.backBtnText}>←</Text>
           </TouchableOpacity>
         ) : (
-          <View style={styles.logoBadge}>
-            <Text style={styles.logoText}>RM</Text>
-          </View>
+          <Image
+            source={require('../../../assets/icon.png')}
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
         )}
       </View>
 
@@ -32,7 +35,7 @@ export const HeaderBar = ({ title, showBack = false, onBackPress, rightElement }
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: '#0F172A',
+    backgroundColor: colors.dark,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -41,7 +44,7 @@ const styles = StyleSheet.create({
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
   },
   left: {
@@ -52,31 +55,23 @@ const styles = StyleSheet.create({
     minWidth: 40,
     alignItems: 'flex-end',
   },
-  logoBadge: {
+  headerLogo: {
     width: 34,
     height: 34,
     borderRadius: 8,
-    backgroundColor: '#F59E0B',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoText: {
-    color: '#0F172A',
-    fontWeight: '900',
-    fontSize: 15,
   },
   backBtn: {
     padding: 4,
   },
   backBtnText: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontSize: 22,
     fontWeight: '700',
   },
   title: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: colors.textLight,
     letterSpacing: 0.3,
     textAlign: 'center',
     flex: 1,

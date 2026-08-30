@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getNotificationsApi, markNotificationAsReadApi, markAllNotificationsAsReadApi } from '../../api/notifications';
 import HeaderBar from '../../components/Common/HeaderBar';
 import EmptyState from '../../components/Common/EmptyState';
+import colors from '../../theme/colors';
 
 export const NotificationsScreen = ({ navigation }) => {
   const { user } = useAuth();
@@ -91,7 +92,7 @@ export const NotificationsScreen = ({ navigation }) => {
         data={notifications}
         keyExtractor={(item) => item._id}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchNotifications(); }} colors={['#0284C7']} />
+          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchNotifications(); }} colors={[colors.primaryDark]} />
         }
         renderItem={({ item }) => (
           <TouchableOpacity
@@ -121,56 +122,62 @@ export const NotificationsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   markReadText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#0284C7',
+    color: colors.primary,
   },
   listContent: {
     padding: 16,
     paddingBottom: 110,
   },
   itemCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: 16,
     marginBottom: 12,
-    borderColor: '#E2E8F0',
+    borderColor: colors.border,
     borderWidth: 1,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
   unreadCard: {
-    backgroundColor: '#F0F9FF',
-    borderColor: '#BAE6FD',
+    borderColor: colors.primaryDark,
+    backgroundColor: colors.primaryLight,
   },
   itemHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 6,
   },
   itemTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   unreadDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#0284C7',
+    backgroundColor: colors.tabActive,
   },
   itemMessage: {
     fontSize: 13,
-    color: '#475569',
-    marginBottom: 8,
+    color: colors.textSecondary,
     lineHeight: 18,
+    marginBottom: 6,
   },
   itemTime: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: colors.textMuted,
     fontWeight: '600',
+    alignSelf: 'flex-end',
   },
 });
 

@@ -7,6 +7,7 @@ import CustomInput from '../../components/Common/CustomInput';
 import CategoryChip from '../../components/Common/CategoryChip';
 import VehicleCard from '../../components/Vehicles/VehicleCard';
 import EmptyState from '../../components/Common/EmptyState';
+import colors from '../../theme/colors';
 
 export const VehicleSearchScreen = ({ navigation }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -79,13 +80,13 @@ export const VehicleSearchScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   searchHeader: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: colors.border,
   },
   chipRow: {
     paddingVertical: 4,

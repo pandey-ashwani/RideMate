@@ -6,6 +6,7 @@ import { getVehiclesApi, updateVehicleApi, deleteVehicleApi } from '../../api/ve
 import { resolveImageUrl } from '../../utils/config';
 import HeaderBar from '../../components/Common/HeaderBar';
 import TouchButton from '../../components/Common/TouchButton';
+import colors from '../../theme/colors';
 
 export const MyVehiclesScreen = ({ navigation }) => {
   const { user } = useAuth();
@@ -189,59 +190,67 @@ export const MyVehiclesScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
+  },
+  listContent: {
+    padding: 16,
+    paddingBottom: 90,
   },
   verificationBanner: {
-    backgroundColor: '#FEF3C7',
-    borderWidth: 1,
-    borderColor: '#F59E0B',
-    padding: 14,
+    backgroundColor: colors.warningBg,
+    borderColor: colors.warningBorder,
+    borderWidth: 1.5,
+    borderRadius: 16,
+    padding: 16,
     margin: 16,
-    marginBottom: 8,
-    borderRadius: 12,
+    marginBottom: 0,
   },
   bannerTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '800',
-    color: '#92400E',
+    color: colors.warningText,
     marginBottom: 4,
   },
   bannerSub: {
     fontSize: 12,
-    color: '#B45309',
+    color: colors.warningText,
     lineHeight: 17,
-    marginBottom: 10,
+    marginBottom: 12,
   },
   profileBtn: {
-    backgroundColor: '#0F172A',
+    backgroundColor: colors.surface,
+    borderColor: colors.warningBorder,
+    borderWidth: 1,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
     alignSelf: 'flex-start',
   },
   profileBtnText: {
-    color: '#FFFFFF',
+    color: colors.warningText,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginTop: 12,
+    backgroundColor: colors.surface,
     borderRadius: 16,
+    marginBottom: 14,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
     elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
   image: {
     width: '100%',
-    height: 160,
+    height: 150,
+    backgroundColor: colors.surfaceMuted,
   },
   content: {
-    padding: 16,
+    padding: 14,
   },
   titleRow: {
     flexDirection: 'row',
@@ -251,23 +260,23 @@ const styles = StyleSheet.create({
   },
   brand: {
     fontSize: 12,
-    color: '#0284C7',
-    fontWeight: '700',
+    color: colors.tabActive,
+    fontWeight: '800',
     textTransform: 'uppercase',
   },
   title: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   price: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#0284C7',
+    color: colors.textPrimary,
   },
   location: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.textSecondary,
     marginBottom: 14,
   },
   actionsRow: {
@@ -275,23 +284,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   editBtn: {
-    backgroundColor: '#F0F9FF',
+    backgroundColor: colors.infoBg,
     borderWidth: 1,
-    borderColor: '#0284C7',
+    borderColor: colors.infoBorder,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 10,
     marginLeft: 6,
   },
   editBtnText: {
-    color: '#0284C7',
-    fontWeight: '700',
+    color: colors.tabActive,
+    fontWeight: '800',
     fontSize: 13,
   },
   deleteBtn: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: colors.errorBg,
     borderWidth: 1,
-    borderColor: '#EF4444',
+    borderColor: colors.errorBorder,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 10,
@@ -309,12 +318,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
     marginBottom: 6,
   },
   emptySub: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
   },

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import TouchButton from '../../components/Common/TouchButton';
 import CustomInput from '../../components/Common/CustomInput';
+import colors from '../../theme/colors';
 
 export const RegisterScreen = ({ route, navigation }) => {
   const { register } = useAuth();
@@ -72,6 +73,11 @@ export const RegisterScreen = ({ route, navigation }) => {
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           
           <View style={styles.brandHeader}>
+            <Image
+              source={require('../../../assets/icon.png')}
+              style={styles.brandLogo}
+              resizeMode="contain"
+            />
             <Text style={styles.brandTitle}>Create Account</Text>
             <Text style={styles.brandSub}>Join RideMate to rent rides or list your fleet</Text>
           </View>
@@ -169,7 +175,7 @@ export const RegisterScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: colors.dark,
   },
   container: {
     padding: 20,
@@ -180,22 +186,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
+  brandLogo: {
+    width: 64,
+    height: 64,
+    borderRadius: 14,
+    marginBottom: 8,
+  },
   brandTitle: {
     fontSize: 26,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: colors.textLight,
     marginBottom: 4,
   },
   brandSub: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: colors.textMuted,
   },
   roleTabs: {
     flexDirection: 'row',
-    backgroundColor: '#1E293B',
+    backgroundColor: colors.darkSurface,
     borderRadius: 12,
     padding: 4,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.darkBorder,
   },
   roleTab: {
     flex: 1,
@@ -204,47 +218,55 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   roleTabActive: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: colors.primary,
   },
   roleTabText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: colors.textMuted,
   },
   roleTabTextActive: {
-    color: '#0F172A',
+    color: colors.textOnPrimary,
+    fontWeight: '800',
   },
   formCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 20,
-    padding: 20,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: colors.border,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
   errorBox: {
-    backgroundColor: '#FEF2F2',
-    borderColor: '#FECACA',
+    backgroundColor: colors.errorBg,
+    borderColor: colors.errorBorder,
     borderWidth: 1,
     padding: 10,
     borderRadius: 10,
     marginBottom: 14,
   },
   errorText: {
-    color: '#DC2626',
+    color: colors.errorText,
     fontSize: 12,
     fontWeight: '700',
   },
   footerLinkRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 16,
+    marginTop: 18,
   },
   footerText: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.textSecondary,
   },
   linkText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#0284C7',
+    color: colors.tabActive,
   },
 });
 

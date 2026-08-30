@@ -3,6 +3,7 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useAuth } from '../context/AuthContext';
+import colors from '../theme/colors';
 
 import AuthNavigator from './AuthNavigator';
 import CustomerTabNavigator from './CustomerTabNavigator';
@@ -21,7 +22,7 @@ export const AppNavigator = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0284C7" />
+        <ActivityIndicator size="large" color={colors.primaryDark} />
       </View>
     );
   }
@@ -65,9 +66,9 @@ export const AppNavigator = () => {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#0F172A',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.background,
   },
 });
 

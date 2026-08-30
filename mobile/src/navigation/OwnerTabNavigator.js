@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LayoutDashboard, Car, ClipboardList, Bell, User } from 'lucide-react-native';
+import colors from '../theme/colors';
 
 import OwnerDashboardScreen from '../screens/Owner/OwnerDashboardScreen';
 import MyVehiclesScreen from '../screens/Owner/MyVehiclesScreen';
@@ -20,11 +21,11 @@ export const OwnerTabNavigator = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#0284C7',
-        tabBarInactiveTintColor: '#94A3B8',
+        tabBarActiveTintColor: colors.tabActive,
+        tabBarInactiveTintColor: colors.tabInactive,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E2E8F0',
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
           height: 56 + bottomInset,
           paddingBottom: bottomInset,
           paddingTop: 6,

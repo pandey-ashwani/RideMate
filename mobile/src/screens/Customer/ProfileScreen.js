@@ -8,6 +8,7 @@ import { resolveImageUrl } from '../../utils/config';
 import HeaderBar from '../../components/Common/HeaderBar';
 import TouchButton from '../../components/Common/TouchButton';
 import CustomInput from '../../components/Common/CustomInput';
+import colors from '../../theme/colors';
 
 export const ProfileScreen = ({ navigation }) => {
   const { user, logout, updateProfile } = useAuth();
@@ -376,7 +377,7 @@ export const ProfileScreen = ({ navigation }) => {
                   style={styles.uploadAvatarBtn}
                 >
                   {avatarUploading ? (
-                    <ActivityIndicator size="small" color="#0284C7" />
+                    <ActivityIndicator size="small" color={colors.primaryDark} />
                   ) : (
                     <Text style={styles.uploadAvatarText}>📷 Change Profile Photo</Text>
                   )}
@@ -420,7 +421,7 @@ export const ProfileScreen = ({ navigation }) => {
                 ) : (
                   <TouchableOpacity style={styles.pickerBox} onPress={handlePickLicense} disabled={licenseUploading}>
                     {licenseUploading ? (
-                      <ActivityIndicator size="small" color="#0284C7" />
+                      <ActivityIndicator size="small" color={colors.primaryDark} />
                     ) : (
                       <>
                         <Text style={{ fontSize: 26, marginBottom: 4 }}>📷</Text>
@@ -447,7 +448,7 @@ export const ProfileScreen = ({ navigation }) => {
                     ) : (
                       <TouchableOpacity style={styles.pickerBox} onPress={handlePickVerificationDoc} disabled={docUploading}>
                         {docUploading ? (
-                          <ActivityIndicator size="small" color="#0284C7" />
+                          <ActivityIndicator size="small" color={colors.primaryDark} />
                         ) : (
                           <>
                             <Text style={{ fontSize: 26, marginBottom: 4 }}>📄</Text>

@@ -40,13 +40,14 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password, role) => {
     try {
       const res = await loginApi(email, password, role);
+      const userObj = res.user ? { ...res.user, token: res.token } : res;
       
-      setUser(res);
-      await AsyncStorage.setItem('ridemate_user', JSON.stringify(res));
+      setUser(userObj);
+      await AsyncStorage.setItem('ridemate_user', JSON.stringify(userObj));
       if (res.token) {
         await AsyncStorage.setItem('ridemate_token', res.token);
       }
-      return { success: true, user: res };
+      return { success: true, user: userObj };
     } catch (err) {
       return { success: false, message: err.message || 'Login failed' };
     }
@@ -55,17 +56,18 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const res = await registerApi(userData);
+      const userObj = res.user ? { ...res.user, token: res.token } : res;
       
       if (res.requiresOtp) {
-        return { success: true, requiresOtp: true, user: res };
+        return { success: true, requiresOtp: true, user: userObj };
       }
 
-      setUser(res);
-      await AsyncStorage.setItem('ridemate_user', JSON.stringify(res));
+      setUser(userObj);
+      await AsyncStorage.setItem('ridemate_user', JSON.stringify(userObj));
       if (res.token) {
         await AsyncStorage.setItem('ridemate_token', res.token);
       }
-      return { success: true, user: res };
+      return { success: true, user: userObj };
     } catch (err) {
       return { success: false, message: err.message || 'Registration failed' };
     }
@@ -74,7 +76,7 @@ export const AuthProvider = ({ children }) => {
   const sendOtp = async (email, purpose = 'verification') => {
     try {
       const res = await sendOtpApi(email, purpose);
-      return { success: true, message: res.message, devOtp: res.devOtp };
+      return { success: true, message: res.message, devOtp: res.devOtp || res.otp };
     } catch (err) {
       return { success: false, message: err.message || 'Failed to send OTP' };
     }
@@ -83,13 +85,14 @@ export const AuthProvider = ({ children }) => {
   const verifyOtp = async (email, otp) => {
     try {
       const res = await verifyOtpApi(email, otp);
+      const userObj = res.user ? { ...res.user, token: res.token || (res.user && res.user.token) } : res;
       
-      if (res.token) {
-        setUser(res);
-        await AsyncStorage.setItem('ridemate_user', JSON.stringify(res));
-        await AsyncStorage.setItem('ridemate_token', res.token);
+      if (res.token || userObj.token) {
+        setUser(userObj);
+        await AsyncStorage.setItem('ridemate_user', JSON.stringify(userObj));
+        await AsyncStorage.setItem('ridemate_token', res.token || userObj.token);
       }
-      return { success: true, user: res };
+      return { success: true, user: userObj };
     } catch (err) {
       return { success: false, message: err.message || 'OTP verification failed' };
     }
@@ -98,7 +101,7 @@ export const AuthProvider = ({ children }) => {
   const resendOtp = async (email) => {
     try {
       const res = await resendOtpApi(email);
-      return { success: true, message: res.message, devOtp: res.devOtp };
+      return { success: true, message: res.message, devOtp: res.devOtp || res.otp };
     } catch (err) {
       return { success: false, message: err.message || 'Failed to resend OTP' };
     }
@@ -107,9 +110,18 @@ export const AuthProvider = ({ children }) => {
   const forgotPassword = async (email) => {
     try {
       const res = await forgotPasswordApi(email);
-      return { success: true, message: res.message, devOtp: res.devOtp };
+      return { success: true, message: res.message, devOtp: res.devOtp || res.otp, otp: res.otp };
     } catch (err) {
       return { success: false, message: err.message || 'Failed to send password reset code' };
+    }
+  };
+
+  const verifyResetOtp = async (email, otp) => {
+    try {
+      const res = await verifyResetOtpApi(email, otp);
+      return { success: true, message: res.message };
+    } catch (err) {
+      return { success: false, message: err.message || 'Invalid or expired verification code.' };
     }
   };
 
@@ -157,6 +169,7 @@ export const AuthProvider = ({ children }) => {
         verifyOtp,
         resendOtp,
         forgotPassword,
+        verifyResetOtp,
         resetPassword,
         updateProfile,
       }}

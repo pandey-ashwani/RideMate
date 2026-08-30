@@ -7,6 +7,7 @@ import HeaderBar from '../../components/Common/HeaderBar';
 import BookingCard from '../../components/Bookings/BookingCard';
 import EmptyState from '../../components/Common/EmptyState';
 import TouchButton from '../../components/Common/TouchButton';
+import colors from '../../theme/colors';
 
 export const MyBookingsScreen = ({ navigation }) => {
   const { user } = useAuth();
@@ -69,7 +70,7 @@ export const MyBookingsScreen = ({ navigation }) => {
         data={bookings}
         keyExtractor={(item) => item._id}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchBookings(); }} colors={['#0284C7']} />
+          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchBookings(); }} colors={[colors.primaryDark]} />
         }
         renderItem={({ item }) => (
           <BookingCard
@@ -107,7 +108,7 @@ export const MyBookingsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   listContent: {
     padding: 16,

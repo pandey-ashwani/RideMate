@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import colors from '../../theme/colors';
 
 export const CategoryChip = ({ label, icon, selected, onPress }) => {
   return (
@@ -35,12 +36,17 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   chipSelected: {
-    backgroundColor: '#0284C7',
-    borderColor: '#0284C7',
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryDark,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   chipUnselected: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
   },
   iconText: {
     fontSize: 16,
@@ -51,10 +57,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   labelSelected: {
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
+    fontWeight: '800',
   },
   labelUnselected: {
-    color: '#475569',
+    color: colors.textSecondary,
   },
 });
 

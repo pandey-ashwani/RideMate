@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import TouchButton from '../../components/Common/TouchButton';
 import CustomInput from '../../components/Common/CustomInput';
+import colors from '../../theme/colors';
 
 export const OTPVerificationScreen = ({ route, navigation }) => {
   const { verifyOtp, resendOtp } = useAuth();
@@ -63,79 +64,55 @@ export const OTPVerificationScreen = ({ route, navigation }) => {
     ).padStart(2, '0')}`;
   };
 
-const handleVerify = async () => {
-  setError('');
-  setSuccessMsg('');
+  const handleVerify = async () => {
+    setError('');
+    setSuccessMsg('');
 
-  if (!otp.trim()) {
-    setError('Please enter the verification code.');
-    return;
-  }
-
-  if (!/^\d{6}$/.test(otp.trim())) {
-    setError('Please enter the 6-digit verification code.');
-    return;
-  }
-
-  if (otpTimer <= 0) {
-    setError('This OTP has expired. Please request a new code.');
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    const response = await verifyOtp(identifier, otp.trim());
-
-    console.log('OTP verification result:', response);
-
-    if (!response?.success) {
-      setError(
-        response?.message ||
-          'Invalid verification code. Please try again.'
-      );
+    if (!otp.trim()) {
+      setError('Please enter the 6-digit verification code.');
       return;
     }
 
-    // OTP successfully verified
-    setSuccessMsg('Email verified successfully!');
+    if (!/^\d{6}$/.test(otp.trim())) {
+      setError('Please enter a valid 6-digit numerical code.');
+      return;
+    }
 
-    /*
-     * AuthContext has already:
-     * 1. Saved the verified user
-     * 2. Saved the JWT token
-     * 3. Called setUser()
-     *
-     * Therefore AppNavigator will automatically switch
-     * from OTPVerification to the Customer/Owner navigation.
-     */
+    if (otpTimer <= 0) {
+      setError('This OTP has expired. Please request a new code.');
+      return;
+    }
 
-    // Small delay so user can see the success message
-    setTimeout(() => {
-      navigation.reset({
-        index: 0,
-        routes: [
-          {
-            name: response?.user?.role === 'owner'
-              ? 'OwnerTabs'
-              : 'MainTabs',
-          },
-        ],
-      });
-    }, 500);
+    try {
+      setLoading(true);
 
-  } catch (error) {
-    console.log('OTP verification error:', error);
+      const response = await verifyOtp(identifier, otp.trim());
 
-    setError(
-      error?.response?.data?.message ||
-        error?.message ||
-        'Unable to verify OTP. Please try again.'
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+      if (!response?.success) {
+        setError(
+          response?.message ||
+            'Invalid verification code. Please try again.'
+        );
+        return;
+      }
+
+      // OTP successfully verified
+      setSuccessMsg('Email verified successfully! Entering dashboard...');
+
+      // AuthContext.verifyOtp() has saved the verified user & token and updated state.
+      // AppNavigator automatically transitions to the correct dashboard (Customer/Owner) based on auth state.
+    } catch (error) {
+      console.log('OTP verification error:', error);
+
+      setError(
+        error?.response?.data?.message ||
+          error?.message ||
+          'Unable to verify OTP. Please try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleResend = async () => {
     if (resendCooldown > 0 || resending) return;
@@ -286,7 +263,13 @@ const handleVerify = async () => {
             {/* Change email */}
             <TouchableOpacity
               style={styles.changeButton}
-              onPress={() => navigation.goBack()}
+              onPress={() => {
+                if (navigation.canGoBack()) {
+                  navigation.goBack();
+                } else {
+                  navigation.navigate('Login');
+                }
+              }}
             >
               <Text style={styles.changeText}>Change email address</Text>
             </TouchableOpacity>
@@ -305,7 +288,7 @@ const styles = StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: colors.dark,
   },
 
   container: {
@@ -315,45 +298,54 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 24,
     padding: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
 
   iconCircle: {
     width: 68,
     height: 68,
     borderRadius: 34,
-    backgroundColor: '#E0F2FE',
+    backgroundColor: colors.infoBg,
     alignSelf: 'center',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 18,
+    borderWidth: 1,
+    borderColor: colors.infoBorder,
   },
 
   icon: {
     fontSize: 30,
-    color: '#0284C7',
+    color: colors.textPrimary,
   },
 
   title: {
     fontSize: 25,
     fontWeight: '900',
-    color: '#0F172A',
+    color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: 8,
   },
 
   subtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.textSecondary,
     textAlign: 'center',
   },
 
   email: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#0284C7',
+    color: colors.textPrimary,
     textAlign: 'center',
     marginTop: 5,
     marginBottom: 20,
@@ -361,54 +353,56 @@ const styles = StyleSheet.create({
 
   timerContainer: {
     alignSelf: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceMuted,
     borderRadius: 14,
     paddingHorizontal: 18,
     paddingVertical: 10,
     marginBottom: 18,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
 
   timerLabel: {
     fontSize: 11,
-    color: '#64748B',
+    color: colors.textSecondary,
     fontWeight: '600',
   },
 
   timer: {
     fontSize: 18,
-    color: '#0284C7',
+    color: colors.tabActive,
     fontWeight: '900',
     marginTop: 2,
   },
 
   errorBox: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: colors.errorBg,
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: colors.errorBorder,
     borderRadius: 12,
     padding: 12,
     marginBottom: 14,
   },
 
   errorText: {
-    color: '#DC2626',
+    color: colors.errorText,
     fontSize: 13,
     fontWeight: '700',
     textAlign: 'center',
   },
 
   successBox: {
-    backgroundColor: '#ECFDF5',
+    backgroundColor: colors.successBg,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: colors.successBorder,
     borderRadius: 12,
     padding: 12,
     marginBottom: 14,
   },
 
   successText: {
-    color: '#059669',
+    color: colors.successText,
     fontSize: 13,
     fontWeight: '700',
     textAlign: 'center',
@@ -427,18 +421,18 @@ const styles = StyleSheet.create({
 
   resendText: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.textSecondary,
   },
 
   resendButton: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#0284C7',
+    color: colors.tabActive,
     marginLeft: 5,
   },
 
   resendDisabled: {
-    color: '#94A3B8',
+    color: colors.disabledText,
   },
 
   changeButton: {
@@ -447,7 +441,7 @@ const styles = StyleSheet.create({
   },
 
   changeText: {
-    color: '#64748B',
+    color: colors.textSecondary,
     fontSize: 12,
     fontWeight: '700',
   },
