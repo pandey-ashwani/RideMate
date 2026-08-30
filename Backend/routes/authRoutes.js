@@ -20,7 +20,14 @@ router.post('/send-otp', sendOTP);
 router.post('/verify-otp', verifyOTP);
 router.post('/resend-otp', resendOTP);
 router.post('/login', authUser);
-router.post('/forgot-password', forgotPassword);
+router.post(
+  '/forgot-password',
+  (req, res, next) => {
+    console.log('[FORGOT PASSWORD] ROUTE HIT');
+    next();
+  },
+  forgotPassword
+);
 router.post('/verify-reset-otp', verifyResetOtp);
 router.post('/reset-password', resetPassword);
 

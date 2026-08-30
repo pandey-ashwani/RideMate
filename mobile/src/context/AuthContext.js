@@ -134,8 +134,16 @@ export const AuthProvider = ({ children }) => {
   const forgotPassword = async (email) => {
     try {
       const res = await forgotPasswordApi(email);
-      return { success: true, message: res.message, devOtp: res.devOtp || res.otp, otp: res.otp };
+      console.log('[FORGOT PASSWORD] API RESPONSE:', res);
+      return {
+        success: true,
+        message: res.message,
+        developmentOtp: res.developmentOtp || res.devOtp || res.otp,
+        devOtp: res.devOtp || res.developmentOtp || res.otp,
+        otp: res.otp
+      };
     } catch (err) {
+      console.error('[FORGOT PASSWORD] API ERROR:', err);
       return { success: false, message: err.message || 'Failed to send password reset code' };
     }
   };

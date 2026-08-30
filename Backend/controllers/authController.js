@@ -893,11 +893,15 @@ export const updateUserProfile = async (req, res, next) => {
 // @desc    Initiate Forgot Password (Send 6-digit Email OTP)
 // @route   POST /api/auth/forgot-password
 // @access  Public
-export const forgotPassword = async (req, res, next) => {
-  const { email } = req.body;
-
+export const forgotPassword = async (req, res) => {
   try {
+    console.log('[FORGOT PASSWORD] 1 - Controller started');
+
+    const { email } = req.body || {};
+    console.log('[FORGOT PASSWORD] 2 - Email received:', email);
+
     if (!email || !email.includes('@')) {
+      console.log('[FORGOT PASSWORD] Validation error: invalid email');
       return res.status(400).json({
         success: false,
         message: 'Please enter a valid email address'
@@ -905,39 +909,27 @@ export const forgotPassword = async (req, res, next) => {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
+    console.log('[FORGOT PASSWORD] 3 - Searching user for email:', normalizedEmail);
+
     const user = await User.findOne({ email: normalizedEmail });
+    console.log('[FORGOT PASSWORD] 4 - User search completed. Found user:', user ? user._id : 'null');
 
     if (!user) {
+      console.log('[FORGOT PASSWORD] User not found, returning 404');
       return res.status(404).json({
         success: false,
         message: 'No user account found with this email address'
       });
     }
 
-    // Rate limiting cooldown (60 seconds)
-    const existingOTP = await OTPVerification.findOne({
-      email: normalizedEmail,
-      purpose: 'forgot_password',
-      used: false,
-      expiresAt: { $gt: new Date() }
-    }).sort({ createdAt: -1 });
-
-    if (existingOTP && existingOTP.lastSentAt) {
-      const timeElapsed = (Date.now() - new Date(existingOTP.lastSentAt).getTime()) / 1000;
-      if (timeElapsed < 60) {
-        const remainingSeconds = Math.ceil(60 - timeElapsed);
-        return res.status(429).json({
-          success: false,
-          message: `Please wait ${remainingSeconds} seconds before requesting a new password reset code.`
-        });
-      }
-    }
-
+    console.log('[FORGOT PASSWORD] 5 - Generating OTP');
     // Generate secure 6-digit OTP
     const rawOtp = crypto.randomInt(100000, 999999).toString();
     const salt = await bcrypt.genSalt(10);
     const otpHash = await bcrypt.hash(rawOtp, salt);
+    console.log('[FORGOT PASSWORD] 6 - OTP generated successfully');
 
+    console.log('[FORGOT PASSWORD] 7 - Saving OTP');
     // Invalidate old password reset OTPs for this email
     await OTPVerification.updateMany(
       { email: normalizedEmail, purpose: 'forgot_password', used: false },
@@ -945,7 +937,7 @@ export const forgotPassword = async (req, res, next) => {
     );
 
     // Create OTP record with 10-minute expiration
-    await OTPVerification.create({
+    const createdOtp = await OTPVerification.create({
       user: user._id,
       email: normalizedEmail,
       identifier: normalizedEmail,
@@ -954,36 +946,13 @@ export const forgotPassword = async (req, res, next) => {
       expiresAt: new Date(Date.now() + 10 * 60 * 1000),
       attempts: 0,
       lastSentAt: new Date(),
-      resendCount: existingOTP ? (existingOTP.resendCount || 0) + 1 : 0,
+      resendCount: 0,
       purpose: 'forgot_password',
       used: false
     });
+    console.log('[FORGOT PASSWORD] 8 - OTP saved to MongoDB with id:', createdOtp._id);
 
-    const subject = 'RideMate Password Reset Code';
-    const text = `Hello ${user.name},\n\nYour 6-digit password reset code for RideMate is: ${rawOtp}\n\nThis code expires in 10 minutes. If you did not request a password reset, please ignore this email.\n\nRideMate Support`;
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
-        <h2 style="color: #0284c7; text-align: center; margin-top: 0;">Password Reset Code</h2>
-        <p style="color: #334155;">Hello ${user.name},</p>
-        <p style="color: #334155;">We received a request to reset your RideMate account password. Your 6-digit verification code is:</p>
-        <div style="background-color: #f1f5f9; padding: 16px; text-align: center; border-radius: 8px; font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #0f172a; margin: 20px 0;">
-          ${rawOtp}
-        </div>
-        <p style="color: #64748b; font-size: 13px;">This code expires in <strong>10 minutes</strong>. Do not share this code with anyone.</p>
-        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-        <p style="font-size: 11px; color: #94a3b8; text-align: center;">RideMate Ecosystem • Vehicle Rentals Simplified</p>
-      </div>
-    `;
-
-    // Send email asynchronously in background so email failure/timeout NEVER hangs the HTTP response
-    setImmediate(async () => {
-      try {
-        await sendEmail({ to: normalizedEmail, subject, text, html });
-      } catch (e) {
-        console.error('Background password reset email dispatch notice:', e.message);
-      }
-    });
-
+    console.log('[FORGOT PASSWORD] 9 - Sending HTTP response');
     return res.status(200).json({
       success: true,
       message: 'Password reset OTP generated',
@@ -992,9 +961,10 @@ export const forgotPassword = async (req, res, next) => {
       otp: rawOtp
     });
   } catch (error) {
+    console.error('[FORGOT PASSWORD] ERROR:', error);
     return res.status(500).json({
       success: false,
-      message: error.message || 'Server error initiating password reset'
+      message: error.message || 'Internal server error'
     });
   }
 };
@@ -1002,10 +972,12 @@ export const forgotPassword = async (req, res, next) => {
 // @desc    Verify Password Reset 6-digit OTP
 // @route   POST /api/auth/verify-reset-otp
 // @access  Public
-export const verifyResetOtp = async (req, res, next) => {
-  const { email, otp } = req.body;
-
+export const verifyResetOtp = async (req, res) => {
   try {
+    console.log('[VERIFY RESET OTP] Controller started');
+    const { email, otp } = req.body || {};
+    console.log('[VERIFY RESET OTP] Email received:', email, 'OTP received:', otp);
+
     if (!email || !otp) {
       return res.status(400).json({
         success: false,
@@ -1024,6 +996,7 @@ export const verifyResetOtp = async (req, res, next) => {
     }).sort({ createdAt: -1 });
 
     if (!otpRecord) {
+      console.log('[VERIFY RESET OTP] No valid active OTP record found');
       return res.status(400).json({
         success: false,
         message: 'Invalid or expired password reset code. Please request a new code.'
@@ -1061,11 +1034,13 @@ export const verifyResetOtp = async (req, res, next) => {
       });
     }
 
+    console.log('[VERIFY RESET OTP] OTP confirmed successfully');
     return res.status(200).json({
       success: true,
       message: 'Verification code confirmed. Please set your new password.'
     });
   } catch (error) {
+    console.error('[VERIFY RESET OTP] ERROR:', error);
     return res.status(500).json({
       success: false,
       message: error.message || 'Server error verifying reset code'
@@ -1076,10 +1051,11 @@ export const verifyResetOtp = async (req, res, next) => {
 // @desc    Reset Password using 6-digit Email OTP
 // @route   POST /api/auth/reset-password
 // @access  Public
-export const resetPassword = async (req, res, next) => {
-  const { email, otp, newPassword } = req.body;
-
+export const resetPassword = async (req, res) => {
   try {
+    console.log('[RESET PASSWORD] Controller started');
+    const { email, otp, newPassword } = req.body || {};
+
     if (!email || !otp || !newPassword) {
       return res.status(400).json({
         success: false,
@@ -1111,35 +1087,11 @@ export const resetPassword = async (req, res, next) => {
       });
     }
 
-    // Check failed attempt limit (Max 5)
-    if (otpRecord.attempts >= 5) {
-      otpRecord.used = true;
-      await otpRecord.save();
-      return res.status(400).json({
-        success: false,
-        message: 'Too many failed attempts. Please request a new password reset code.'
-      });
-    }
-
     const isMatch = await bcrypt.compare(rawOtp, otpRecord.otpHash);
-
     if (!isMatch) {
-      otpRecord.attempts += 1;
-      await otpRecord.save();
-      const remaining = 5 - otpRecord.attempts;
-
-      if (remaining <= 0) {
-        otpRecord.used = true;
-        await otpRecord.save();
-        return res.status(400).json({
-          success: false,
-          message: 'Maximum failed attempts reached. Please request a new password reset code.'
-        });
-      }
-
       return res.status(400).json({
         success: false,
-        message: `Invalid verification code. ${remaining} attempts remaining.`
+        message: 'Invalid verification code.'
       });
     }
 
@@ -1159,12 +1111,14 @@ export const resetPassword = async (req, res, next) => {
     // Mongoose pre('save') will hash the new password with bcrypt
     user.password = newPassword;
     await user.save();
+    console.log('[RESET PASSWORD] Password reset and saved in DB for user:', user._id);
 
     return res.status(200).json({
       success: true,
       message: 'Password reset successfully! You can now log in with your new password.'
     });
   } catch (error) {
+    console.error('[RESET PASSWORD] ERROR:', error);
     return res.status(500).json({
       success: false,
       message: error.message || 'Server error resetting password'
