@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiRequest } from '../../utils/api';
+import { apiRequest, resolveImageUrl } from '../../utils/api';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { Card } from '../../components/Common/Card';
 import { Badge } from '../../components/Common/Badge';
@@ -96,9 +96,12 @@ export const ViewAllBookings = () => {
                       <td className="py-4 px-6 font-bold text-slate-400">{b._id}</td>
                       <td className="py-4 px-6 font-bold text-slate-800 flex items-center gap-3">
                         <img 
-                          src={b.vehicleId?.image.startsWith('http') ? b.vehicleId.image : `http://localhost:5000${b.vehicleId?.image}`} 
+                          src={resolveImageUrl(b.vehicleId?.image)} 
                           alt={b.vehicleId?.name} 
                           className="w-10 h-7 object-cover rounded-md border" 
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500';
+                          }}
                         />
                         <span>{b.vehicleId?.name}</span>
                       </td>

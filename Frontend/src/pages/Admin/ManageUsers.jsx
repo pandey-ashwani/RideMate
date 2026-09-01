@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { apiRequest } from '../../utils/api';
+import { apiRequest, resolveImageUrl } from '../../utils/api';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { Card } from '../../components/Common/Card';
 import { Badge } from '../../components/Common/Badge';
@@ -86,9 +86,12 @@ export const ManageUsers = () => {
                     <tr key={u._id} className="hover:bg-slate-50/50">
                       <td className="py-4 px-6 flex items-center gap-3">
                         <img 
-                          src={u.avatar ? (u.avatar.startsWith('http') ? u.avatar : `http://localhost:5000${u.avatar}`) : 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'} 
+                          src={u.avatar ? resolveImageUrl(u.avatar) : 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'} 
                           alt={u.name} 
                           className="w-8 h-8 rounded-full object-cover border" 
+                          onError={(e) => {
+                            e.target.src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=User';
+                          }}
                         />
                         <span className="font-bold text-slate-800">{u.name}</span>
                       </td>

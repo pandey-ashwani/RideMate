@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Menu, X, User, LogOut, LayoutDashboard, Calendar, Settings, Shield } from 'lucide-react';
 import { Button } from '../Common/Button';
 import { NotificationBell } from '../Common/NotificationBell';
+import { resolveImageUrl } from '../../utils/api';
 
 export const Navbar = () => {
   const { user, logout } = useAuth();
@@ -69,9 +70,12 @@ export const Navbar = () => {
                   className="flex items-center gap-2.5 p-1 px-3 rounded-full hover:bg-slate-50 border border-slate-100 transition-colors duration-200 cursor-pointer"
                 >
                   <img
-                    src={user.avatar ? (user.avatar.startsWith('http') ? user.avatar : `http://localhost:5000${user.avatar}`) : 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'}
+                    src={user.avatar ? resolveImageUrl(user.avatar) : 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'}
                     alt={user.name}
                     className="w-8 h-8 rounded-full object-cover ring-2 ring-primary/10"
+                    onError={(e) => {
+                      e.target.src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=User';
+                    }}
                   />
                   <div className="text-left hidden lg:block">
                     <p className="text-xs font-bold text-slate-800 leading-none">{user.name}</p>
@@ -198,9 +202,12 @@ export const Navbar = () => {
               <div>
                 <div className="flex items-center gap-3 mb-4">
                   <img
-                    src={user.avatar ? (user.avatar.startsWith('http') ? user.avatar : `http://localhost:5000${user.avatar}`) : 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'}
+                    src={user.avatar ? resolveImageUrl(user.avatar) : 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'}
                     alt={user.name}
                     className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20"
+                    onError={(e) => {
+                      e.target.src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=User';
+                    }}
                   />
                   <div>
                     <h4 className="text-sm font-bold text-slate-800">{user.name}</h4>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { apiRequest } from '../../utils/api';
+import { apiRequest, resolveImageUrl } from '../../utils/api';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { Card } from '../../components/Common/Card';
 import { Badge } from '../../components/Common/Badge';
@@ -84,9 +84,12 @@ export const VerifyOwners = () => {
               <Card key={owner._id} className="flex flex-col sm:flex-row items-center gap-6 p-6 border border-slate-100" hoverable={false}>
                 {/* Owner Avatar */}
                 <img 
-                  src={owner.avatar ? (owner.avatar.startsWith('http') ? owner.avatar : `http://localhost:5000${owner.avatar}`) : 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'} 
+                  src={owner.avatar ? resolveImageUrl(owner.avatar) : 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'} 
                   alt={owner.name} 
                   className="w-12 h-12 rounded-full object-cover border shrink-0" 
+                  onError={(e) => {
+                    e.target.src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=User';
+                  }}
                 />
                 
                 <div className="flex-grow flex flex-col gap-1.5 md:text-left text-center">
@@ -116,7 +119,7 @@ export const VerifyOwners = () => {
                   {owner.verificationDoc && (
                     <div className="mt-2">
                       <a 
-                        href={owner.verificationDoc.startsWith('http') ? owner.verificationDoc : `http://localhost:5000${owner.verificationDoc}`}
+                        href={resolveImageUrl(owner.verificationDoc)}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100"

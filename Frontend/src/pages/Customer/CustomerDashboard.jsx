@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { apiRequest } from '../../utils/api';
+import { apiRequest, resolveImageUrl } from '../../utils/api';
 import { Navbar } from '../../components/Navbar/navbar';
 import { Footer } from '../../Footer/footer';
 import { Card } from '../../components/Common/Card';
@@ -261,9 +261,12 @@ export const CustomerDashboard = () => {
         {/* User Card */}
         <div className="bg-white border border-slate-100 rounded-2xl shadow-xs p-6 mb-8 flex flex-col sm:flex-row items-center gap-5 text-left">
           <img
-            src={user?.avatar ? (user.avatar.startsWith('http') ? user.avatar : `http://localhost:5000${user.avatar}`) : 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'}
+            src={user?.avatar ? resolveImageUrl(user.avatar) : 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'}
             alt={user?.name}
             className="w-16 h-16 rounded-full object-cover ring-4 ring-primary/10"
+            onError={(e) => {
+              e.target.src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=User';
+            }}
           />
           <div>
             <h2 className="text-xl font-black text-slate-800">{user?.name}</h2>
@@ -316,9 +319,12 @@ export const CustomerDashboard = () => {
                   <Card key={booking._id} className="flex flex-col md:flex-row items-center gap-5 p-5 border border-slate-100" hoverable={false}>
                     {/* Vehicle image */}
                     <img
-                      src={booking.vehicleId?.image.startsWith('http') ? booking.vehicleId.image : `http://localhost:5000${booking.vehicleId?.image}`}
+                      src={resolveImageUrl(booking.vehicleId?.image)}
                       alt={booking.vehicleId?.name}
                       className="w-32 h-20 object-cover rounded-xl border border-slate-100 shrink-0"
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500';
+                      }}
                     />
 
                     {/* Booking metadata */}

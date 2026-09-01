@@ -11,7 +11,7 @@ import { Footer } from '../Footer/footer';
 import { Modal } from '../components/Common/Modal';
 import { Button } from '../components/Common/Button';
 import { Input } from '../components/Common/Input';
-import { apiRequest } from '../utils/api';
+import { apiRequest, resolveImageUrl } from '../utils/api';
 import { ShieldCheck, Info, Calendar } from 'lucide-react';
 
 export const Home = () => {
@@ -232,9 +232,12 @@ export const Home = () => {
                 {/* Vehicle mini details */}
                 <div className="flex gap-4 items-center bg-slate-50 border border-slate-100 rounded-xl p-4">
                   <img
-                    src={selectedVehicle.image.startsWith('http') ? selectedVehicle.image : `http://localhost:5000${selectedVehicle.image}`}
+                    src={resolveImageUrl(selectedVehicle.image)}
                     alt={selectedVehicle.name}
                     className="w-20 h-14 object-cover rounded-lg border"
+                    onError={(e) => {
+                      e.target.src = 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500';
+                    }}
                   />
                   <div className="text-left">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">

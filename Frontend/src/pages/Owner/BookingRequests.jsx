@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { apiRequest } from '../../utils/api';
+import { apiRequest, resolveImageUrl, API_URL } from '../../utils/api';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { Card } from '../../components/Common/Card';
 import { Badge } from '../../components/Common/Badge';
@@ -78,9 +78,12 @@ export const BookingRequests = () => {
               <Card key={req._id} className="flex flex-col md:flex-row items-center gap-5 p-5 border border-slate-100" hoverable={false}>
                 {/* Vehicle image */}
                 <img
-                  src={req.vehicleId?.image.startsWith('http') ? req.vehicleId.image : `http://localhost:5000${req.vehicleId?.image}`}
+                  src={resolveImageUrl(req.vehicleId?.image)}
                   alt={req.vehicleId?.name}
                   className="w-28 h-18 object-cover rounded-xl border border-slate-100 shrink-0"
+                  onError={(e) => {
+                    e.target.src = 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500';
+                  }}
                 />
 
                 {/* Metadata */}
@@ -119,7 +122,7 @@ export const BookingRequests = () => {
                       {req.licenseDoc && (
                         <div className="mt-1">
                           <a 
-                            href={`http://localhost:5000/api/documents/dl/${req._id}`}
+                            href={`${API_URL}/documents/dl/${req._id}`}
                             target="_blank"
                             rel="noreferrer"
                             className="text-primary font-bold hover:underline inline-flex items-center gap-1"

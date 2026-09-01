@@ -7,6 +7,7 @@ import {
   Users, CheckCircle2, FileText, Settings 
 } from 'lucide-react';
 import { NotificationBell } from '../components/Common/NotificationBell';
+import { resolveImageUrl } from '../utils/api';
 
 export const DashboardLayout = ({ children, role = 'owner' }) => {
   const { user, logout } = useAuth();
@@ -82,9 +83,12 @@ export const DashboardLayout = ({ children, role = 'owner' }) => {
             {/* User Mini Info */}
             <div className="px-6 py-6 border-b border-slate-800 flex items-center gap-3">
               <img
-                src={user?.avatar ? (user.avatar.startsWith('http') ? user.avatar : `http://localhost:5000${user.avatar}`) : 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'}
+                src={user?.avatar ? resolveImageUrl(user.avatar) : 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'}
                 alt={user?.name}
                 className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20"
+                onError={(e) => {
+                  e.target.src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=User';
+                }}
               />
               <div className="text-left">
                 <p className="text-xs font-black text-white truncate max-w-[130px]">{user?.name}</p>
