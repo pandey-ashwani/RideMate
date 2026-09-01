@@ -1,5 +1,16 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+export const resolveImageUrl = (path) => {
+  if (!path) {
+    return 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500';
+  }
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  const baseHost = API_URL.replace(/\/api\/?$/, '');
+  return `${baseHost}${path.startsWith('/') ? '' : '/'}${path}`;
+};
+
 export const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('ridemate_token');
   const headers = {

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { apiRequest } from '../../utils/api';
+import { apiRequest, resolveImageUrl } from '../../utils/api';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { Card } from '../../components/Common/Card';
 import { Badge } from '../../components/Common/Badge';
 import { Button } from '../../components/Common/Button';
-import { Check, Trash2, MapPin, Gauge } from 'lucide-react';
+import { Check, Trash2, MapPin } from 'lucide-react';
 
 export const ManageListings = () => {
   const [vehicles, setVehicles] = useState([]);
@@ -89,9 +89,12 @@ export const ManageListings = () => {
                 <Card key={vehicle._id} className="flex flex-col overflow-hidden p-0 border border-slate-100" hoverable={false}>
                   <div className="relative h-44 bg-slate-50 shrink-0">
                     <img 
-                      src={vehicle.image.startsWith('http') ? vehicle.image : `http://localhost:5000${vehicle.image}`} 
+                      src={resolveImageUrl(vehicle.image)} 
                       alt={vehicle.name} 
                       className="w-full h-full object-cover" 
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500';
+                      }}
                     />
                     <div className="absolute top-3 left-3 flex flex-col gap-1.5">
                       <Badge variant="primary" className="uppercase">{vehicle.type}</Badge>
@@ -107,7 +110,9 @@ export const ManageListings = () => {
                   <div className="p-5 text-left flex flex-col flex-grow justify-between">
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-1.5">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{vehicle.brand}</span>
+                        <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">
+                          {vehicle.ownerId?.company ? `🏢 ${vehicle.ownerId.company}` : vehicle.brand || 'RideMate Fleet'}
+                        </span>
                       </div>
                       
                       <h3 className="text-base font-black text-slate-800 tracking-tight leading-none mb-2 truncate">
@@ -116,13 +121,8 @@ export const ManageListings = () => {
                       
                       <p className="text-xs text-slate-400 font-semibold flex items-center gap-1 mb-4">
                         <MapPin className="w-3.5 h-3.5" />
-                        <span>{vehicle.location}</span>
+                        <span>{vehicle.location || 'Local Fleet'}</span>
                       </p>
-
-                      <div className="grid grid-cols-2 gap-2 text-[10px] font-semibold text-slate-500 bg-slate-50 border border-slate-100 p-2.5 rounded-lg mb-4">
-                        <span>⚡ {vehicle.specs.fuel}</span>
-                        <span>👥 {vehicle.specs.seats} seat(s)</span>
-                      </div>
                     </div>
 
                     <div className="border-t border-slate-100 pt-4 flex items-center gap-2">

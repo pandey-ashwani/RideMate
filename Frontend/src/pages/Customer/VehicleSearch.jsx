@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { apiRequest } from '../../utils/api';
+import { apiRequest, resolveImageUrl } from '../../utils/api';
 import { Navbar } from '../../components/Navbar/navbar';
 import { Footer } from '../../Footer/footer';
 import { Card } from '../../components/Common/Card';
@@ -9,6 +9,7 @@ import { Button } from '../../components/Common/Button';
 import { StarRating } from '../../components/Common/StarRating';
 import { Modal } from '../../components/Common/Modal';
 import { Input } from '../../components/Common/Input';
+import { VehicleCard } from '../../components/Vehicles/VehicleCard';
 import { useAuth } from '../../context/AuthContext';
 import { Search, SlidersHorizontal, MapPin, Gauge, User, Calendar, Info, Star, MessageSquare } from 'lucide-react';
 
@@ -316,57 +317,12 @@ export const VehicleSearch = () => {
             ) : vehicles.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {vehicles.map((vehicle) => (
-                  <Card
+                  <VehicleCard
                     key={vehicle._id}
-                    className="flex flex-col h-full overflow-hidden p-0 border border-slate-100/75"
-                    hoverable={true}
-                    onClick={() => handleOpenDetailModal(vehicle)}
-                  >
-                    <div className="relative h-44 overflow-hidden bg-slate-100 shrink-0">
-                      <img
-                        src={vehicle.image.startsWith('http') ? vehicle.image : `http://localhost:5000${vehicle.image}`}
-                        alt={vehicle.name}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute top-3 left-3 flex gap-1.5 flex-col">
-                        <Badge variant="primary" className="uppercase">{vehicle.type}</Badge>
-                        {!vehicle.availability && <Badge variant="warning">Booked Out</Badge>}
-                      </div>
-                      <div className="absolute bottom-3 right-3 bg-slate-900/80 backdrop-blur-xs px-2.5 py-1 rounded-md text-white font-extrabold text-xs">
-                        ₹{vehicle.pricePerDay}/day
-                      </div>
-                    </div>
-
-                    <div className="p-5 flex flex-col justify-between flex-grow text-left">
-                      <div>
-                        <div className="flex items-center justify-between gap-2 mb-1.5">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{vehicle.brand}</span>
-                          {vehicle.rating > 0 && (
-                            <div className="flex items-center gap-1 text-[11px] font-bold text-slate-700">
-                              <Star className="w-3 h-3 text-amber-400 fill-current" />
-                              <span>{vehicle.rating}</span>
-                            </div>
-                          )}
-                        </div>
-                        <h3 className="text-base font-black text-slate-800 tracking-tight leading-none mb-3 truncate">
-                          {vehicle.name}
-                        </h3>
-                        <p className="text-xs text-slate-400 font-semibold flex items-center gap-1 mb-4">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span className="truncate">{vehicle.location}</span>
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 bg-slate-50 rounded-lg p-2.5 mb-4 border border-slate-100">
-                        <Gauge className="w-4 h-4 text-slate-400" />
-                        <span className="truncate">Specs: {vehicle.specs.fuel}</span>
-                      </div>
-
-                      <Button variant="primary" size="sm" className="w-full font-bold shadow-xs">
-                        View Details
-                      </Button>
-                    </div>
-                  </Card>
+                    vehicle={vehicle}
+                    onSelect={() => handleOpenDetailModal(vehicle)}
+                    onRentNow={() => handleOpenDetailModal(vehicle)}
+                  />
                 ))}
               </div>
             ) : (
@@ -454,16 +410,19 @@ export const VehicleSearch = () => {
               {/* Left Column: Image and Reviews */}
               <div className="flex flex-col gap-6">
                 <img
-                  src={activeVehicle.image.startsWith('http') ? activeVehicle.image : `http://localhost:5000${activeVehicle.image}`}
+                  src={resolveImageUrl(activeVehicle.image)}
                   alt={activeVehicle.name}
                   className="w-full h-64 object-cover rounded-xl border border-slate-100 shadow-xs"
+                  onError={(e) => {
+                    e.target.src = 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500';
+                  }}
                 />
                 
                 {/* Description */}
                 <div>
                   <h4 className="text-sm font-bold text-slate-800 mb-2">Description</h4>
                   <p className="text-xs text-slate-500 leading-relaxed font-semibold">
-                    {activeVehicle.description}
+                    {activeVehicle.description || 'No additional description provided for this vehicle.'}
                   </p>
                 </div>
 
@@ -493,34 +452,45 @@ export const VehicleSearch = () => {
                 </div>
               </div>
 
-              {/* Right Column: Spec badges & booking details */}
+              {/* Right Column: Key details & booking */}
               <div className="flex flex-col gap-5 border-l border-slate-100 pl-0 md:pl-8">
                 <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{activeVehicle.brand}</span>
-                  <h3 className="text-2xl font-black text-slate-800 tracking-tight leading-none mb-2">{activeVehicle.name}</h3>
-                  <p className="text-xs text-slate-400 font-semibold flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span>{activeVehicle.location}</span>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">
+                      {activeVehicle.ownerId?.company ? `🏢 ${activeVehicle.ownerId.company}` : activeVehicle.brand || 'RideMate Fleet'}
+                    </span>
+                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+                      activeVehicle.availability
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-rose-50 text-rose-700 border-rose-200'
+                    }`}>
+                      {activeVehicle.availability ? 'Available' : 'Rented'}
+                    </span>
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-snug mb-1">{activeVehicle.name}</h3>
+                  <p className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                    <span>{activeVehicle.location || 'Local Fleet'}</span>
                   </p>
                 </div>
 
-                {/* Specifications Grid */}
+                {/* Synchronized Vehicle Info Grid */}
                 <div className="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-100 p-4 rounded-xl text-xs font-semibold text-slate-600">
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Transmission</span>
-                    <span className="text-slate-800">{activeVehicle.specs.transmission}</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Category</span>
+                    <span className="text-slate-900 font-bold uppercase">{activeVehicle.type}</span>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Power Type</span>
-                    <span className="text-slate-800">{activeVehicle.specs.fuel}</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Daily Rate</span>
+                    <span className="text-slate-900 font-black">₹{activeVehicle.pricePerDay} / day</span>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Capacity</span>
-                    <span className="text-slate-800">{activeVehicle.specs.seats} Passenger(s)</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Host / Fleet</span>
+                    <span className="text-slate-900 font-bold truncate">{activeVehicle.ownerId?.company || activeVehicle.ownerId?.name || activeVehicle.brand || 'RideMate Fleet'}</span>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Estimated Range</span>
-                    <span className="text-slate-800">{activeVehicle.specs.range}</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Location</span>
+                    <span className="text-slate-900 font-bold truncate">{activeVehicle.location || 'Local Area'}</span>
                   </div>
                 </div>
 
