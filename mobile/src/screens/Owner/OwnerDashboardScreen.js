@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, RefreshControl, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
-import { getOwnerRequestsApi } from '../../api/bookings';
+import { getOwnerRequestsApi, updateBookingStatusApi } from '../../api/bookings';
 import { getVehiclesApi } from '../../api/vehicles';
+import { API_BASE_URL } from '../../utils/config';
 import HeaderBar from '../../components/Common/HeaderBar';
 import OwnerBookingRequestCard from '../../components/Bookings/OwnerBookingRequestCard';
 import TouchButton from '../../components/Common/TouchButton';
@@ -45,6 +46,33 @@ export const OwnerDashboardScreen = ({ navigation }) => {
   useEffect(() => {
     loadDashboardData();
   }, []);
+
+  const handleUpdateStatus = async (bookingId, status) => {
+    try {
+      setLoading(true);
+      await updateBookingStatusApi(bookingId, status);
+      Alert.alert(
+        'Success',
+        status === 'owner_accepted'
+          ? 'Booking request accepted! Customer has been notified to confirm pickup details.'
+          : status === 'rejected'
+          ? 'Booking request declined.'
+          : 'Ride marked as completed.'
+      );
+      await loadDashboardData();
+    } catch (err) {
+      Alert.alert('Error', err.message || `Failed to update booking status to ${status}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewDL = (bookingId) => {
+    const url = `${API_BASE_URL}/documents/dl/${bookingId}`;
+    Linking.openURL(url).catch(() => {
+      Alert.alert('Error', 'Unable to open protected document link.');
+    });
+  };
 
   const pendingRequests = requests.filter(r => r.status === 'pending');
   const activeRentals = requests.filter(r => r.status === 'confirmed' || r.status === 'owner_accepted');
@@ -106,7 +134,10 @@ export const OwnerDashboardScreen = ({ navigation }) => {
               <OwnerBookingRequestCard
                 key={req._id}
                 request={req}
-                onActionSuccess={loadDashboardData}
+                onAccept={(id) => handleUpdateStatus(id, 'owner_accepted')}
+                onReject={(id) => handleUpdateStatus(id, 'rejected')}
+                onComplete={(id) => handleUpdateStatus(id, 'completed')}
+                onViewDL={req.drivingLicense ? handleViewDL : null}
               />
             ))}
           </View>
