@@ -98,15 +98,7 @@ export const processUploadedFile = async (file, folder = 'general') => {
   if (isCloudinaryConfigured()) {
     try {
       const cloudinaryResult = await uploadToCloudinary(tempFilePath, { folder });
-      return {
-        path: cloudinaryResult.secure_url,
-        url: cloudinaryResult.secure_url,
-        public_id: cloudinaryResult.public_id,
-        bytes: cloudinaryResult.bytes,
-        format: cloudinaryResult.format,
-      };
-    } finally {
-      // Local upload cleanup: Always remove temporary file from disk
+      // Remove temporary file after successful Cloudinary upload
       if (tempFilePath && fs.existsSync(tempFilePath)) {
         try {
           fs.unlinkSync(tempFilePath);
@@ -114,10 +106,20 @@ export const processUploadedFile = async (file, folder = 'general') => {
           console.warn('Temporary file cleanup warning:', cleanupErr.message);
         }
       }
+      return {
+        path: cloudinaryResult.secure_url,
+        url: cloudinaryResult.secure_url,
+        public_id: cloudinaryResult.public_id,
+        bytes: cloudinaryResult.bytes,
+        format: cloudinaryResult.format,
+      };
+    } catch (cloudinaryErr) {
+      console.error('Cloudinary upload error:', cloudinaryErr.message);
+      console.warn('Falling back to local disk storage...');
     }
   }
 
-  // Fallback: If Cloudinary is not configured, move temporary file to persistent uploads directory
+  // Fallback: If Cloudinary is not configured or fails, move temporary file to persistent uploads directory
   const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
   const finalFilename = `img-${Date.now()}-${Math.floor(Math.random() * 1000000)}${ext}`;
   const finalDest = path.join(uploadDir, finalFilename);

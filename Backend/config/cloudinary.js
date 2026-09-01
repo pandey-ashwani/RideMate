@@ -1,13 +1,27 @@
 import { v2 as cloudinary } from 'cloudinary';
 
-const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-const apiKey = process.env.CLOUDINARY_API_KEY;
-const apiSecret = process.env.CLOUDINARY_API_SECRET;
+/**
+ * Clean and retrieve Cloudinary configuration from environment variables.
+ */
+export const getCloudinaryConfig = () => {
+  const cloudName = (process.env.CLOUDINARY_CLOUD_NAME || '').trim().replace(/^['"]|['"]$/g, '');
+  const apiKey = (process.env.CLOUDINARY_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
+  const apiSecret = (process.env.CLOUDINARY_API_SECRET || '').trim().replace(/^['"]|['"]$/g, '');
+  const cloudinaryUrl = (process.env.CLOUDINARY_URL || '').trim().replace(/^['"]|['"]$/g, '');
+
+  return { cloudName, apiKey, apiSecret, cloudinaryUrl };
+};
 
 /**
  * Checks whether all required Cloudinary environment variables are configured.
  */
 export const isCloudinaryConfigured = () => {
+  const { cloudName, apiKey, apiSecret, cloudinaryUrl } = getCloudinaryConfig();
+  
+  if (cloudinaryUrl && cloudinaryUrl.startsWith('cloudinary://')) {
+    return true;
+  }
+
   return Boolean(
     cloudName &&
     apiKey &&
@@ -18,14 +32,33 @@ export const isCloudinaryConfigured = () => {
   );
 };
 
-// Initialize Cloudinary if credentials are present
+/**
+ * Ensure Cloudinary client is configured with the latest environment values.
+ */
+const ensureCloudinaryConfig = () => {
+  const { cloudName, apiKey, apiSecret, cloudinaryUrl } = getCloudinaryConfig();
+
+  if (cloudinaryUrl && cloudinaryUrl.startsWith('cloudinary://')) {
+    cloudinary.config({ cloudinary_url: cloudinaryUrl, secure: true });
+    return true;
+  }
+
+  if (cloudName && apiKey && apiSecret) {
+    cloudinary.config({
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
+      secure: true,
+    });
+    return true;
+  }
+
+  return false;
+};
+
+// Initial config attempt
 if (isCloudinaryConfigured()) {
-  cloudinary.config({
-    cloud_name: cloudName,
-    api_key: apiKey,
-    api_secret: apiSecret,
-    secure: true,
-  });
+  ensureCloudinaryConfig();
   console.log('✅ Cloudinary initialized for persistent cloud storage');
 } else {
   console.warn('⚠️ Notice: Cloudinary credentials not fully configured in environment. Using local file storage fallback.');
@@ -38,7 +71,7 @@ if (isCloudinaryConfigured()) {
  * @returns {Promise<{ secure_url: string, public_id: string }>}
  */
 export const uploadToCloudinary = async (filePath, options = {}) => {
-  if (!isCloudinaryConfigured()) {
+  if (!ensureCloudinaryConfig()) {
     throw new Error('Cloudinary environment variables (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET) are not configured.');
   }
 
@@ -46,7 +79,9 @@ export const uploadToCloudinary = async (filePath, options = {}) => {
 
   const uploadOptions = {
     folder: defaultFolder,
-    resource_type: 'auto',
+    resource_type: options.resource_type || 'image',
+    use_filename: true,
+    unique_filename: true,
     ...options,
   };
 
@@ -71,6 +106,7 @@ export const deleteFromCloudinary = async (publicId) => {
   }
 
   try {
+    ensureCloudinaryConfig();
     const result = await cloudinary.uploader.destroy(publicId);
     return result;
   } catch (err) {
