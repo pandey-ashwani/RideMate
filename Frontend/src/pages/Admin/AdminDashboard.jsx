@@ -4,7 +4,7 @@ import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { Card } from '../../components/Common/Card';
 import { Badge } from '../../components/Common/Badge';
 import { Button } from '../../components/Common/Button';
-import { Users, Car, ShieldCheck, DollarSign, Wallet, Inbox } from 'lucide-react';
+import { Users, Car, ShieldCheck, IndianRupee, Wallet, Inbox } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const AdminDashboard = () => {
@@ -85,7 +85,7 @@ export const AdminDashboard = () => {
 
               <Card className="flex items-center gap-4 border border-slate-100" hoverable={false}>
                 <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
-                  <DollarSign className="w-6 h-6" />
+                  <IndianRupee className="w-6 h-6" />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Gross Billing Volume</p>

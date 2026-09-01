@@ -4,7 +4,7 @@ import { apiRequest } from '../../utils/api';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { Card } from '../../components/Common/Card';
 import { Button } from '../../components/Common/Button';
-import { DollarSign, Car, CalendarClock, TrendingUp, Inbox, Info } from 'lucide-react';
+import { IndianRupee, Car, CalendarClock, TrendingUp, Inbox, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const OwnerDashboard = () => {
@@ -133,7 +133,7 @@ export const OwnerDashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               <Card className="flex items-center gap-4 border border-slate-100" hoverable={false}>
                 <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
-                  <DollarSign className="w-6 h-6" />
+                  <IndianRupee className="w-6 h-6" />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Total Earnings</p>

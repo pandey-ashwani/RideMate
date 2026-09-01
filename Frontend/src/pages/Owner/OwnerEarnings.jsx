@@ -4,7 +4,7 @@ import { apiRequest } from '../../utils/api';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { Card } from '../../components/Common/Card';
 import { Button } from '../../components/Common/Button';
-import { DollarSign, Percent, FileDown, ArrowUpRight } from 'lucide-react';
+import { IndianRupee, Percent, FileDown, ArrowUpRight } from 'lucide-react';
 
 export const OwnerEarnings = () => {
   const { user } = useAuth();
@@ -77,7 +77,7 @@ export const OwnerEarnings = () => {
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Gross Billings</span>
                   <div className="w-8 h-8 bg-slate-50 border border-slate-100 rounded-lg flex items-center justify-center text-slate-400">
-                    <DollarSign className="w-4 h-4" />
+                    <IndianRupee className="w-4 h-4" />
                   </div>
                 </div>
                 <h3 className="text-2xl font-black text-slate-800">₹{financials.gross}</h3>

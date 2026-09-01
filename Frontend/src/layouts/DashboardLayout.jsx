@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   Menu, X, Home as HomeIcon, LogOut, ShieldAlert,
-  Car, CalendarCheck, DollarSign, UserCog, Shield, 
+  Car, CalendarCheck, IndianRupee, UserCog, Shield, 
   Users, CheckCircle2, FileText, Settings 
 } from 'lucide-react';
 import { NotificationBell } from '../components/Common/NotificationBell';
@@ -25,7 +25,7 @@ export const DashboardLayout = ({ children, role = 'owner' }) => {
     { label: 'Dashboard', path: '/owner', icon: HomeIcon },
     { label: 'My Vehicles', path: '/owner/vehicles', icon: Car },
     { label: 'Bookings', path: '/owner/bookings', icon: CalendarCheck },
-    { label: 'Earnings', path: '/owner/earnings', icon: DollarSign },
+    { label: 'Earnings', path: '/owner/earnings', icon: IndianRupee },
     { label: 'Profile', path: '/owner/profile', icon: UserCog }
   ];
 
