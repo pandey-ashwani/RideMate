@@ -5,6 +5,7 @@ import OTPVerification from '../models/OTPVerification.js';
 import generateToken from '../utils/generateToken.js';
 import sendSMS from '../services/smsService.js';
 import sendEmail from '../services/emailService.js';
+import { deleteFromCloudinary, extractPublicIdFromUrl } from '../config/cloudinary.js';
 
 // Indian Mobile Number Validator & E.164 Normalizer
 export const normalizeIndianPhone = (phoneInput) => {
@@ -834,9 +835,14 @@ export const updateUserProfile = async (req, res, next) => {
     const user = await User.findById(req.user._id);
 
     if (user) {
-      user.name = req.body.name || user.name;
-      user.email = req.body.email || user.email;
-      user.avatar = req.body.avatar || user.avatar;
+      let oldAvatarPublicId = user.avatarPublicId || extractPublicIdFromUrl(user.avatar);
+      let isAvatarReplaced = false;
+
+      if (req.body.avatar && req.body.avatar !== user.avatar) {
+        user.avatar = req.body.avatar;
+        user.avatarPublicId = req.body.avatarPublicId || extractPublicIdFromUrl(req.body.avatar) || '';
+        isAvatarReplaced = Boolean(oldAvatarPublicId && oldAvatarPublicId !== user.avatarPublicId);
+      }
       
       if (req.body.phone) {
         const norm = normalizeIndianPhone(req.body.phone);
@@ -861,6 +867,13 @@ export const updateUserProfile = async (req, res, next) => {
       }
 
       const updatedUser = await user.save();
+
+      // Clean up old Cloudinary avatar after new profile is saved successfully
+      if (isAvatarReplaced && oldAvatarPublicId) {
+        deleteFromCloudinary(oldAvatarPublicId).catch((delErr) => {
+          console.warn('Old Cloudinary avatar deletion skipped/failed:', delErr.message);
+        });
+      }
 
       res.json({
         _id: updatedUser._id,

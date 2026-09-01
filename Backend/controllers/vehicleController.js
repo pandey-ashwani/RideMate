@@ -1,6 +1,7 @@
 import Vehicle from '../models/Vehicle.js';
 import Review from '../models/Review.js';
 import User from '../models/User.js';
+import { deleteFromCloudinary, extractPublicIdFromUrl } from '../config/cloudinary.js';
 
 // @desc    Get all vehicles (Search, filter, paginate)
 // @route   GET /api/vehicles
@@ -162,7 +163,15 @@ export const deleteVehicle = async (req, res, next) => {
         throw new Error('Not authorized to delete this vehicle listing');
       }
 
+      const imagePublicId = extractPublicIdFromUrl(vehicle.image);
       await vehicle.deleteOne();
+
+      if (imagePublicId) {
+        deleteFromCloudinary(imagePublicId).catch((err) => {
+          console.warn('Vehicle image Cloudinary deletion skipped/failed:', err.message);
+        });
+      }
+
       res.json({ message: 'Vehicle listing removed successfully' });
     } else {
       res.status(404);

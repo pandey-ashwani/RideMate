@@ -26,7 +26,7 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 
 // File Upload endpoint for vehicles & protected DL documents
-import { upload, protectedUpload, validateFileMagicBytes } from './middleware/uploadMiddleware.js';
+import { upload, protectedUpload, validateFileMagicBytes, processUploadedFile } from './middleware/uploadMiddleware.js';
 
 // Load Config
 
@@ -108,35 +108,53 @@ app.use('/api/documents', documentRoutes);
 
 // File Upload handler endpoints
 // Standard public upload (vehicles, avatars)
-app.post('/api/upload', upload.single('image'), (req, res) => {
-  if (!req.file) {
-    res.status(400);
-    throw new Error('No image file provided');
+app.post('/api/upload', upload.single('image'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      res.status(400);
+      throw new Error('No image file provided');
+    }
+
+    const folder = req.query.folder || 'general';
+    const result = await processUploadedFile(req.file, folder);
+
+    res.json({
+      message: 'Image uploaded successfully',
+      path: result.path,
+      url: result.url,
+      public_id: result.public_id || null
+    });
+  } catch (error) {
+    next(error);
   }
-  res.json({
-    message: 'Image uploaded successfully',
-    path: `/uploads/${req.file.filename}`
-  });
 });
 
 // Protected DL document upload handler
-app.post('/api/upload/protected', protectedUpload.single('image'), (req, res) => {
-  if (!req.file) {
-    res.status(400);
-    throw new Error('No document file provided');
-  }
+app.post('/api/upload/protected', protectedUpload.single('image'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      res.status(400);
+      throw new Error('No document file provided');
+    }
 
-  // Validate magic bytes server-side
-  const isValidMagic = validateFileMagicBytes(req.file.path);
-  if (!isValidMagic) {
-    res.status(400);
-    throw new Error('Invalid or corrupted document file signature. Executable or unsupported file types are strictly prohibited.');
-  }
+    // Validate magic bytes server-side
+    const isValidMagic = validateFileMagicBytes(req.file.path);
+    if (!isValidMagic) {
+      res.status(400);
+      throw new Error('Invalid or corrupted document file signature. Executable or unsupported file types are strictly prohibited.');
+    }
 
-  res.json({
-    message: 'Document uploaded securely',
-    path: `/uploads/protected/${req.file.filename}`
-  });
+    const result = await processUploadedFile(req.file, 'documents');
+
+    res.json({
+      message: 'Document uploaded securely',
+      path: result.path,
+      url: result.url,
+      public_id: result.public_id || null
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // SPA catch-all fallback handler for sub-routes on page reloads/desktop mode

@@ -45,7 +45,12 @@ export const getProtectedDLDocument = async (req, res, next) => {
       throw new Error('No Driving License document uploaded for this booking');
     }
 
-    // Sanitize and resolve file path strictly on server-side
+    // If document is stored in Cloudinary, redirect to secure cloud URL
+    if (docPath.startsWith('http://') || docPath.startsWith('https://')) {
+      return res.redirect(docPath);
+    }
+
+    // Sanitize and resolve local file path strictly on server-side
     // Strip leading slashes to resolve relative to process root
     const cleanRelativePath = docPath.replace(/^[/\\]+/, '');
     const absolutePath = path.resolve(process.cwd(), cleanRelativePath);

@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150'
     },
+    avatarPublicId: { type: String, default: '' },
     joinedDate: { type: Date, default: Date.now }
   },
   {
