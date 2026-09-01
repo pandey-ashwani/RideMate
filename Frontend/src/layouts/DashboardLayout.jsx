@@ -76,7 +76,7 @@ export const DashboardLayout = ({ children, role = 'owner' }) => {
             <div className="hidden lg:flex items-center gap-2.5 px-6 py-5 border-b border-slate-800">
               <img src="/logo.png" alt="RideMate Logo" className="w-10 h-10 rounded-xl object-contain shadow-md" />
               <span className="text-base font-extrabold text-white tracking-tight">
-                Ride<span className="text-amber-400">Mate</span>
+                <span className="text-[#f6d041]">Ride</span>Mate
               </span>
             </div>
 

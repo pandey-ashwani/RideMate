@@ -44,7 +44,7 @@ export const Footer = () => {
                 RM
               </div>
               <span className="text-xl font-extrabold text-white tracking-tight">
-                Ride<span className="text-primary-light">Mate</span>
+                <span className="text-[#f6d041]">Ride</span><span className="text-primary-light">Mate</span>
               </span>
             </Link>
             <p className="text-sm text-slate-400 leading-relaxed mt-2">
