@@ -2,10 +2,10 @@ import React from 'react';
 import { Card } from '../Common/Card';
 import { Button } from '../Common/Button';
 import { MapPin } from 'lucide-react';
-import { resolveImageUrl } from '../../utils/api';
+import { resolveImageUrl, getDefaultVehicleImage } from '../../utils/api';
 
 export const VehicleCard = ({ vehicle, onSelect, onRentNow, showActions = true }) => {
-  const imageUrl = resolveImageUrl(vehicle?.image);
+  const imageUrl = resolveImageUrl(vehicle?.image, vehicle?.type, vehicle?.name);
   const brandOrCompany = vehicle?.ownerId?.company
     ? `🏢 ${vehicle.ownerId.company}`
     : vehicle?.brand || 'RideMate Fleet';
@@ -37,7 +37,7 @@ export const VehicleCard = ({ vehicle, onSelect, onRentNow, showActions = true }
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
           onError={(e) => {
-            e.target.src = 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500';
+            e.target.src = getDefaultVehicleImage(vehicle?.type, vehicle?.name);
           }}
         />
 

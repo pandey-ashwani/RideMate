@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { apiRequest, resolveImageUrl } from '../../utils/api';
+import { apiRequest, resolveImageUrl, getDefaultVehicleImage } from '../../utils/api';
 import { Navbar } from '../../components/Navbar/navbar';
 import { Footer } from '../../Footer/footer';
 import { Card } from '../../components/Common/Card';
@@ -410,11 +410,11 @@ export const VehicleSearch = () => {
               {/* Left Column: Image and Reviews */}
               <div className="flex flex-col gap-6">
                 <img
-                  src={resolveImageUrl(activeVehicle.image)}
+                  src={resolveImageUrl(activeVehicle.image, activeVehicle.type, activeVehicle.name)}
                   alt={activeVehicle.name}
                   className="w-full h-64 object-cover rounded-xl border border-slate-100 shadow-xs"
                   onError={(e) => {
-                    e.target.src = 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500';
+                    e.target.src = getDefaultVehicleImage(activeVehicle.type, activeVehicle.name);
                   }}
                 />
                 

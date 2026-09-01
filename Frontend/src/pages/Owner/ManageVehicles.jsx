@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { apiRequest, resolveImageUrl } from '../../utils/api';
+import { apiRequest, resolveImageUrl, getDefaultVehicleImage } from '../../utils/api';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import { Card } from '../../components/Common/Card';
 import { Badge } from '../../components/Common/Badge';
@@ -222,11 +222,11 @@ export const ManageVehicles = () => {
               <Card key={vehicle._id} className="flex flex-col overflow-hidden p-0 border border-slate-100" hoverable={false}>
                 <div className="relative h-44 bg-slate-50 shrink-0">
                   <img 
-                    src={resolveImageUrl(vehicle.image)} 
+                    src={resolveImageUrl(vehicle.image, vehicle.type, vehicle.name)} 
                     alt={vehicle.name} 
                     className="w-full h-full object-cover" 
                     onError={(e) => {
-                      e.target.src = 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500';
+                      e.target.src = getDefaultVehicleImage(vehicle.type, vehicle.name);
                     }}
                   />
                   <div className="absolute top-3 left-3 flex flex-col gap-1.5">
