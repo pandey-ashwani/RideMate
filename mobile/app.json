@@ -19,7 +19,7 @@
       "package": "com.ridemate.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#F7D142"
+        "backgroundColor": "#F6D041"
       }
     },
     "web": {
