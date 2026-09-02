@@ -37,8 +37,8 @@ export const Navbar = () => {
                 alt="RideMate Logo"
                 className="w-10 h-10 rounded-xl object-contain shadow-md group-hover:scale-105 transition-transform duration-200"
               />
-              <span className="text-xl font-extrabold tracking-tight">
-                <span className="text-[#f6d041]">Ride</span><span className="text-slate-800">Mate</span>
+              <span className="text-xl font-black text-slate-900 tracking-tight">
+                Ride<span className="text-amber-500">Mate</span>
               </span>
             </Link>
             

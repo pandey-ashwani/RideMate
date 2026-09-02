@@ -39,12 +39,14 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Brand Info */}
           <div className="flex flex-col gap-4">
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-accent font-black text-xl shadow-md">
-                RM
-              </div>
-              <span className="text-xl font-extrabold text-white tracking-tight">
-                <span className="text-[#f6d041]">Ride</span><span className="text-primary-light">Mate</span>
+            <Link to="/" className="flex items-center gap-3 group">
+              <img
+                src="/logo.png"
+                alt="RideMate Logo"
+                className="w-10 h-10 rounded-xl object-contain shadow-md group-hover:scale-105 transition-transform duration-200"
+              />
+              <span className="text-xl font-black text-white tracking-tight">
+                Ride<span className="text-amber-400">Mate</span>
               </span>
             </Link>
             <p className="text-sm text-slate-400 leading-relaxed mt-2">

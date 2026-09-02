@@ -57,12 +57,10 @@ export const Hero = ({ children }) => {
           <div className="lg:col-span-5 hidden lg:flex items-center justify-center relative select-none">
             {/* Animated circle container */}
             <div className="w-80 h-80 rounded-full border border-white/10 flex items-center justify-center relative animate-pulse duration-[3000ms]">
-              <div className="w-64 h-64 rounded-full border border-white/5 bg-white/5 flex items-center justify-center">
+              <div className="w-64 h-64 rounded-full border border-white/5 bg-white/5 flex items-center justify-center p-4">
                 {/* Visual Graphic Brand Container */}
-                <div className="w-48 h-48 rounded-full bg-accent/10 flex flex-col items-center justify-center text-accent text-center p-6 border border-accent/20">
-                  <span className="text-3xl font-extrabold text-white leading-none mb-1">RIDE</span>
-                  <span className="text-accent text-xs tracking-widest font-black uppercase mb-3">MATE</span>
-                  <p className="text-[10px] text-slate-300 leading-normal font-medium">Safe. Clean. Ready when you are.</p>
+                <div className="w-48 h-48 rounded-3xl overflow-hidden shadow-2xl border-2 border-amber-400/40 flex items-center justify-center bg-amber-400">
+                  <img src="/logo.png" alt="RideMate App Logo" className="w-full h-full object-cover" />
                 </div>
               </div>
 
