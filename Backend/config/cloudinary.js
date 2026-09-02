@@ -117,7 +117,8 @@ export const deleteFromCloudinary = async (publicId) => {
 
 /**
  * Helper to extract Cloudinary public ID from a Cloudinary URL if stored as full URL.
- * e.g. https://res.cloudinary.com/demo/image/upload/v123456/ridemate/avatars/sample.jpg -> ridemate/avatars/sample
+ * Handles transformations, version numbers, folders, and extensions cleanly.
+ * e.g. https://res.cloudinary.com/demo/image/upload/c_scale,w_500/v123456/ridemate/vehicles/sample.jpg -> ridemate/vehicles/sample
  */
 export const extractPublicIdFromUrl = (url) => {
   if (!url || typeof url !== 'string' || !url.includes('cloudinary.com')) {
@@ -125,17 +126,37 @@ export const extractPublicIdFromUrl = (url) => {
   }
 
   try {
-    const parts = url.split('/upload/');
+    const cleanUrl = url.split('?')[0].split('#')[0];
+    const parts = cleanUrl.split('/upload/');
     if (parts.length < 2) return null;
-    
-    // Remove version tag like v123456789/ if present
-    const pathAfterUpload = parts[1].replace(/^v\d+\//, '');
-    // Remove file extension
-    const lastDotIndex = pathAfterUpload.lastIndexOf('.');
-    if (lastDotIndex !== -1) {
-      return pathAfterUpload.substring(0, lastDotIndex);
+
+    const pathAfterUpload = parts[1];
+    const segments = pathAfterUpload.split('/');
+    const cleanSegments = [];
+    let isPastTransformations = false;
+
+    for (const segment of segments) {
+      // Version string like v123456789
+      if (/^v\d+$/.test(segment)) {
+        isPastTransformations = true;
+        continue;
+      }
+      // Transformation parameter like w_500, c_fill, q_auto, f_auto
+      if (!isPastTransformations && /^[a-z]_[a-z0-9_,]+$/i.test(segment)) {
+        continue;
+      }
+      isPastTransformations = true;
+      cleanSegments.push(segment);
     }
-    return pathAfterUpload;
+
+    if (cleanSegments.length === 0) return null;
+
+    const publicIdWithExt = cleanSegments.join('/');
+    const lastDotIndex = publicIdWithExt.lastIndexOf('.');
+    if (lastDotIndex !== -1) {
+      return publicIdWithExt.substring(0, lastDotIndex);
+    }
+    return publicIdWithExt;
   } catch (err) {
     return null;
   }

@@ -129,6 +129,9 @@ export const updateVehicle = async (req, res, next) => {
         throw new Error('Not authorized to edit this vehicle listing');
       }
 
+      const oldImage = vehicle.image;
+      const isImageReplaced = Boolean(image && image !== oldImage);
+
       vehicle.name = name || vehicle.name;
       vehicle.brand = brand || vehicle.brand;
       vehicle.type = type || vehicle.type;
@@ -140,6 +143,17 @@ export const updateVehicle = async (req, res, next) => {
       if (availability !== undefined) vehicle.availability = availability;
 
       const updatedVehicle = await vehicle.save();
+
+      // Only delete old Cloudinary image AFTER database save succeeds
+      if (isImageReplaced && oldImage) {
+        const oldPublicId = extractPublicIdFromUrl(oldImage);
+        if (oldPublicId) {
+          deleteFromCloudinary(oldPublicId).catch((err) => {
+            console.warn('Old vehicle Cloudinary image cleanup skipped/failed:', err.message);
+          });
+        }
+      }
+
       res.json(updatedVehicle);
     } else {
       res.status(404);

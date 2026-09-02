@@ -414,7 +414,8 @@ export const VehicleSearch = () => {
                   alt={activeVehicle.name}
                   className="w-full h-64 object-cover rounded-xl border border-slate-100 shadow-xs"
                   onError={(e) => {
-                    e.target.src = getDefaultVehicleImage(activeVehicle.type, activeVehicle.name);
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = getDefaultVehicleImage(activeVehicle.type, activeVehicle.name);
                   }}
                 />
                 

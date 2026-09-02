@@ -37,7 +37,8 @@ export const VehicleCard = ({ vehicle, onSelect, onRentNow, showActions = true }
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
           onError={(e) => {
-            e.target.src = getDefaultVehicleImage(vehicle?.type, vehicle?.name);
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = getDefaultVehicleImage(vehicle?.type, vehicle?.name);
           }}
         />
 

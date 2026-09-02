@@ -93,7 +93,8 @@ export const ManageListings = () => {
                       alt={vehicle.name} 
                       className="w-full h-full object-cover" 
                       onError={(e) => {
-                        e.target.src = getDefaultVehicleImage(vehicle.type, vehicle.name);
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = getDefaultVehicleImage(vehicle.type, vehicle.name);
                       }}
                     />
                     <div className="absolute top-3 left-3 flex flex-col gap-1.5">
